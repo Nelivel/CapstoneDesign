@@ -45,7 +45,7 @@
   padding: 0 15px;
 }
 .write-button { /* 글쓰기 버튼 */
-  position: fixed; /* 뷰포트(보이는 화면) 기준 고정 */
+  position: fixed; 
   bottom: 80px; /* 하단 네비게이션 바 높이를 고려한 위치 */
   right: calc(50% - 180px); /* .app-container 중앙 기준으로 우측 정렬 */
   width: 100px; height: 45px; border-radius: 25px;

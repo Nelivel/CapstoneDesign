@@ -39,7 +39,7 @@
   font-size: 1.1em;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s ease; /* 호버 효과 */
+  transition: background-color 0.3s ease; 
 }
 
 .login-button:hover {

@@ -76,7 +76,7 @@
 .menu-item .text {
   flex-grow: 1; /* 텍스트가 남은 공간을 채우도록 */
 }
-.menu-item .arrow { /* > 화살표 스타일 */
+.menu-item .arrow { 
   color: #ccc;
   font-weight: bold;
 }

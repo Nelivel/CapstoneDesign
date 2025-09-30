@@ -90,7 +90,7 @@
   font-size: 0.7em;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 0.5px solid #222; /* 검은색 테두리 */ /* 이 부분은 원하시면 다시 추가하시면 됩니다 */
+  border: 0.5px solid #222; /* 검은색 테두리 */ 
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   z-index: 1;
   display: flex;
