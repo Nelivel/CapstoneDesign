@@ -1,0 +1,173 @@
+/* src/pages/ChatRoomPage.css */
+.chat-room-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.chat-room-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: #fff;
+}
+.chat-room-partner-name {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px; /* 뒤로가기 버튼 여백 고려 */
+}
+.message-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 메시지 버블 간 여백 증가 */
+  background-color: #f2f3f7; /* 채팅 배경색 */
+}
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px; /* 메시지 버블과 시간 사이 간격 */
+}
+.message-row.mine {
+  justify-content: flex-end; /* 내 메시지는 오른쪽 정렬 */
+}
+.message-row.partner {
+  justify-content: flex-start; /* 상대 메시지는 왼쪽 정렬 */
+}
+.message-bubble {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 18px;
+  line-height: 1.5;
+  word-break: break-word; /* 긴 텍스트 줄바꿈 */
+}
+.message-bubble.mine {
+  background-color: var(--primary-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.message-bubble.partner {
+  background-color: #e9ecef; /* 더 잘 보이는 회색으로 변경 */
+  color: var(--text-color);
+  border-bottom-left-radius: 4px;
+}
+.message-meta {
+  font-size: 0.75em;
+  color: var(--sub-text-color);
+  white-space: nowrap;
+  margin-bottom: 2px; /* 시간/읽음 여부와 버블 간격 */
+  display: flex;
+  flex-direction: column; /* 시간과 읽음 상태가 세로로 정렬되도록 */
+}
+.message-row.mine .message-meta {
+  align-items: flex-end; /* 내 메시지 메타 정보 오른쪽 정렬 */
+}
+.message-read-status {
+  font-size: 0.7em;
+  font-weight: bold;
+  color: var(--primary-color); /* 읽음 표시는 강조 */
+  margin-top: 2px;
+}
+
+/* --- 채팅 입력창 및 기능 버튼 (여기 집중해서 수정) --- */
+.chat-input-area {
+  display: flex;
+  align-items: flex-end; /* 입력창과 버튼들 바닥 정렬 */
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-color);
+  background-color: #fff;
+  flex-shrink: 0; /* 부모 컨테이너 크기 변경 시 축소되지 않도록 */
+}
+.chat-plus-button {
+  background: none;
+  border: none;
+  font-size: 2.2em; /* + 버튼 크기 키움 */
+  color: var(--sub-text-color);
+  padding: 0 5px;
+  cursor: pointer;
+  height: 40px; /* 입력창 높이와 맞추기 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* 축소 방지 */
+}
+.chat-input-form {
+  display: flex;
+  flex-grow: 1; /* 남은 공간 모두 사용 */
+  gap: 8px;
+  align-items: flex-end; /* 입력창과 전송 버튼 바닥 정렬 */
+}
+.chat-input {
+  flex-grow: 1; /* 남은 공간 모두 사용 */
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  font-size: 1em;
+  min-height: 40px; /* 최소 높이 */
+  max-height: 100px; /* 최대 높이 */
+  resize: none; /* 사용자 임의 크기 조절 방지 */
+  overflow-y: auto; /* 내용 길어지면 스크롤 */
+}
+.chat-send-button {
+  padding: 0 18px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  height: 40px; /* 입력창 높이와 맞추기 */
+  font-size: 1em;
+  flex-shrink: 0; /* 축소 방지 */
+}
+
+/* --- 거래 일정 추천 메시지 스타일 --- */
+.message-bubble.trade-schedule {
+  background-color: #e6f7ff; /* 하늘색 계열 */
+  border: 1px solid #91d5ff;
+  color: var(--text-color);
+  padding: 12px 18px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trade-schedule .title {
+  font-weight: bold;
+  font-size: 1.05em;
+  color: var(--primary-color);
+}
+.trade-schedule .details {
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+.trade-schedule .buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end; /* 버튼 오른쪽 정렬 */
+}
+.trade-schedule .buttons button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.trade-schedule .buttons .accept-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+.trade-schedule .buttons .reject-button,
+.trade-schedule .buttons .default-button {
+  background-color: #e0e0e0;
+  color: var(--text-color);
+  border: none;
+}

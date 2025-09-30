@@ -1,0 +1,77 @@
+/* src/pages/ChatListPage.css */
+.chat-list-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.chat-list-header {
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+  flex-shrink: 0;
+  position: relative; /* 자식 요소인 back-button의 absolute 위치 기준 */
+}
+.chat-room-list {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+.chat-room-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  background: none;
+  width: 100%;
+}
+.chat-room-item:hover {
+  background-color: #f8f9fa;
+}
+.chat-partner-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #eee;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+.chat-info {
+  flex-grow: 1;
+  text-align: left;
+}
+.chat-partner-nickname {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.chat-last-message {
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.8em;
+  color: var(--sub-text-color);
+  flex-shrink: 0;
+}
+.chat-timestamp {
+  margin-bottom: 5px;
+}
+.unread-badge {
+  background-color: #e53e3e;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 0.75em;
+}

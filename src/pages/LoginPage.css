@@ -1,0 +1,107 @@
+/* src/pages/LoginPage.css */
+
+.login-page {
+  flex-grow: 1; /* 메인 콘텐츠 영역이 남은 공간을 채우도록 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 세로 중앙 정렬 */
+  padding: 20px;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 50px;
+  font-size: 2.5em; /* 메인 로고 폰트 크기 */
+  font-weight: bold;
+  color: var(--primary-color); /* 메인 색상 적용 */
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 입력 필드 사이 간격 */
+}
+
+.login-input {
+  padding: 15px 10px;
+  border: none; /* 기본 테두리 제거 */
+  border-bottom: 1px solid var(--border-color); /* 하단 라인만 */
+  font-size: 1em;
+  outline: none; /* 포커스 시 아웃라인 제거 */
+}
+
+.login-button {
+  padding: 15px;
+  background-color: var(--primary-color); /* 커스텀 변수 사용 */
+  color: white;
+  border: none;
+  border-radius: 8px; /* 둥근 모서리 */
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* 호버 효과 */
+}
+
+.login-button:hover {
+  background-color: #4a38e8; /* 약간 어두운 색상 */
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+}
+
+.login-options a {
+  color: var(--sub-text-color);
+}
+
+.login-options a:hover {
+  text-decoration: underline;
+}
+
+/* 뒤로가기 버튼 스타일 (공통으로 사용될 수 있음) */
+.back-button {
+    position: absolute; /* 절대 위치 */
+    top: 20px;
+    left: 20px;
+    font-size: 1.5em;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+
+/* 로그인 옵션 버튼 스타일 */
+.link-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 1em;
+  cursor: pointer;
+  padding: 0 8px;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.link-button:hover {
+  color: #4a38e8; /* 호버 시 색상 변경 */
+  text-decoration: underline;
+}
+
+/* 로그인 옵션 버튼 간격 조정 */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 0.95em;
+  color: var(--sub-text-color);
+  gap: 10px; /* 버튼 사이 간격 */
+}
+.login-options .link-button {
+  padding: 0; /* 링크 버튼 패딩 제거 */
+}

@@ -1,0 +1,125 @@
+/* src/pages/TimetableDisplayPage.css */
+.timetable-display-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.timetable-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: #fff;
+}
+.timetable-header-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px;
+}
+.timetable-main {
+  flex-grow: 1;
+  overflow: auto;
+  padding: 15px;
+  background-color: #fff;
+}
+.manage-button {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 20px auto 0 auto;
+  display: block;
+}
+
+/* --- 에브리타임 스타일 그리드 (비율 수정) --- */
+.timetable-grid-wrapper {
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.timetable-grid {
+  display: grid;
+  grid-template-columns: 30px repeat(5, 1fr);
+  grid-template-rows: 30px repeat(8, 1fr); 
+  height: 70vh;
+  min-height: 500px; 
+  max-height: 700px;
+  position: relative;
+}
+.grid-day-header {
+  text-align: center;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--sub-text-color);
+  padding-top: 8px;
+  border-bottom: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
+}
+.grid-time-label {
+  text-align: right;
+  padding-right: 5px;
+  font-size: 0.75em;
+  color: var(--sub-text-color);
+  border-right: 1px solid var(--border-color);
+  padding-top: 2px;
+}
+.grid-cell {
+  border-top: 1px solid #f0f0f0;
+  border-left: 1px solid var(--border-color);
+}
+.event-block {
+  position: static;
+  width: 100%;
+  height: 100%;
+  color: #444444;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.7em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 0.5px solid #222; /* 검은색 테두리 */ /* 이 부분은 원하시면 다시 추가하시면 됩니다 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  margin: 0;
+  transition: box-shadow 0.2s, transform 0.2s;
+  background: #f5f5f5; /* JS에서 덮어씀 */
+
+  /* 수정: 파란색 아웃라인 제거 */
+  outline: none;
+}
+
+.event-block strong {
+  font-weight: bold;
+  font-size: 1.07em;
+}
+
+.event-block:hover {
+  box-shadow: 0 2px 16px rgba(0,0,0,0.13);
+  transform: scale(1.03);
+  cursor: pointer;
+}
+/* 추가: 포커스 시에도 아웃라인 제거 */
+.event-block:focus {
+  outline: none;
+  /* 원한다면 포커스 시 다른 시각적 효과 추가 */
+  /* box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); */
+}

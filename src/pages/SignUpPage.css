@@ -1,0 +1,102 @@
+/* src/pages/SignUpPage.css */
+
+.signup-page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 세로 중앙 정렬 */
+  padding: 20px;
+}
+
+.signup-header {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.signup-description {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 입력 필드 및 버튼 사이 간격 */
+}
+
+.signup-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* 라벨과 입력 필드 간격 */
+}
+
+.signup-input-group label {
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  text-align: left;
+  margin-bottom: 5px;
+}
+
+.signup-input {
+  padding: 15px 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 1em;
+  outline: none;
+  width: 100%;
+}
+
+.signup-email-input-wrapper {
+  display: flex;
+  gap: 10px; /* 입력창과 버튼 사이 간격 */
+  align-items: center;
+}
+
+.signup-email-input-wrapper .signup-input {
+  flex-grow: 1; /* 입력창이 최대한 공간을 차지하도록 */
+}
+
+.signup-button {
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signup-button:hover:not(:disabled) { /* disabled 상태가 아닐 때만 호버 효과 */
+  background-color: #4a38e8;
+}
+
+.signup-button:disabled { /* disabled 상태 버튼 스타일 */
+  background-color: #ccc; /* 회색 배경 */
+  cursor: not-allowed; /* 마우스 커서 변경 */
+  opacity: 0.7;
+}
+
+/* 팝업 메시지 스타일 (임시) */
+.popup-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+  font-size: 1.1em;
+}
+
+/* 뒤로가기 버튼 스타일은 LoginPage.css에 정의된 back-button을 재사용 */
+/* .back-button { ... } */

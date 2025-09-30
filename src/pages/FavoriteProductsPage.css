@@ -1,0 +1,31 @@
+/* src/pages/FavoriteProductsPage.css */
+.favorite-products-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.favorite-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.favorite-header-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px; /* 뒤로가기 버튼 공간 확보 */
+}
+.favorite-main {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0 15px; /* ProductCard와 동일하게 */
+}
+.no-favorites-message {
+  text-align: center;
+  color: var(--sub-text-color);
+  margin-top: 50px;
+  font-size: 1.1em;
+}
