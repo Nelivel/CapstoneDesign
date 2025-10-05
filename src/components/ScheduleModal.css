@@ -33,6 +33,7 @@
   border: none;
   font-size: 1.5em;
   cursor: pointer;
+  color: #888;
 }
 .modal-form {
   display: flex;
@@ -52,19 +53,22 @@
   padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+  font-size: 1em;
+  font-family: inherit;
 }
 .modal-actions {
   display: flex;
   gap: 10px;
   margin-top: 20px;
 }
-.save-button, .cancel-button, .delete-button {
+.action-button {
   flex: 1;
   padding: 12px;
   border: none;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
+  font-size: 1em;
 }
 .save-button {
   background-color: var(--primary-color);
@@ -74,6 +78,7 @@
   background-color: #f0f0f0;
 }
 .delete-button {
-  background-color: #f44336;
+  background-color: #e53e3e;
   color: white;
+  margin-right: auto; /* 삭제 버튼을 왼쪽으로 */
 }

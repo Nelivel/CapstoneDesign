@@ -2,31 +2,34 @@
 import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import ScheduleModal from '../components/ScheduleModal';
-import './TimetableManagePage.css';
+import './TimetableDisplayPage.css'; // 보기 페이지의 CSS를 재사용합니다!
+import './TimetableManagePage.css'; // 관리 페이지 전용 CSS도 불러옵니다.
 
-const MOCK_EVENTS = [
-  { id: 1, name: '컴퓨터 구조론', day: '월', startTime: '10:00', endTime: '12:00', color: '#a0c4ff' },
-  { id: 2, name: '자료구조', day: '화', startTime: '13:00', endTime: '15:00', color: '#9bf6ff' },
-  { id: 3, name: '알고리즘', day: '수', startTime: '09:00', endTime: '11:00', color: '#ffadad' },
+const INITIAL_EVENTS = [
+  { id: 1, name: '컴퓨터 구조론', place: '공학관 203호', day: '월', startTime: '10:00', endTime: '12:00', color: '#a0c4ff' },
+  { id: 2, name: '자료구조', place: '창조관 301호', day: '화', startTime: '13:00', endTime: '15:00', color: '#9bf6ff' },
+  { id: 3, name: '알고리즘', place: '공학관 101호', day: '수', startTime: '09:00', endTime: '11:00', color: '#ffadad' },
 ];
 
 const days = ['월', '화', '수', '목', '금'];
-const times = Array.from({ length: 12 }, (_, i) => i + 9); // 9시부터 20시
+const hours = Array.from({ length: 8 }, (_, i) => i + 9);
+
+const timeToMinutes = (timeStr) => {
+  const [hour, minute] = timeStr.split(':').map(Number);
+  return hour * 60 + minute;
+};
 
 function TimetableManagePage() {
   const { navigate } = useNavigation();
-  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [events, setEvents] = useState(INITIAL_EVENTS);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const dayToIndex = { '월': 2, '화': 3, '수': 4, '목': 5, '금': 6 };
-  const timeToRow = (time) => parseInt(time.split(':')[0]) - 8;
+  const [eventToEdit, setEventToEdit] = useState(null);
 
   const handleSaveEvent = (eventData) => {
-    if (eventData.id) {
-      setEvents(events.map(e => (e.id === eventData.id ? eventData : e)));
-    } else {
-      setEvents([...events, { ...eventData, id: Date.now() }]);
+    if (eventData.id) { // 수정
+      setEvents(events.map(e => e.id === eventData.id ? eventData : e));
+    } else { // 추가
+      setEvents([...events, { ...eventData, id: Date.now(), place: '장소 미정' }]);
     }
   };
 
@@ -35,63 +38,72 @@ function TimetableManagePage() {
   };
 
   const openAddModal = () => {
-    setSelectedEvent(null);
+    setEventToEdit(null);
     setIsModalOpen(true);
   };
-  
+
   const openEditModal = (event) => {
-    setSelectedEvent(event);
+    setEventToEdit(event);
     setIsModalOpen(true);
   };
 
   return (
     <div className="timetable-manage-page">
-      <header className="timetable-header">
-        <button onClick={() => navigate('/mypage')} className="back-button" style={{position: 'static'}}>{'<'}</button>
-        <h2 className="timetable-header-title">시간표 관리</h2>
+      <header className="timetable-manage-header">
+        <div className="header-title-group">
+          <button onClick={() => navigate('/timetable')} className="back-button" style={{position: 'static'}}>{'<'}</button>
+          <h2>시간표 관리</h2>
+        </div>
         <button onClick={openAddModal} className="add-event-button">+ 일정 추가</button>
       </header>
-      <main className="timetable-main">
-        <div className="timetable-grid-container">
-          {/* Grid Header (Days) */}
-          <div className="grid-header" style={{gridColumn: 1}}></div>
-          {days.map((day, i) => <div key={i} className="grid-header" style={{gridColumn: i + 2}}>{day}</div>)}
-          
-          {/* Grid Times and Cells */}
-          {times.map((time, i) => (
-            <React.Fragment key={i}>
-              <div className="grid-time" style={{gridRow: i + 2}}>{time}</div>
-              {days.map((_, j) => <div key={j} className="grid-cell" style={{gridRow: i + 2, gridColumn: j + 2}}></div>)}
-            </React.Fragment>
-          ))}
+      <main className="timetable-manage-main">
+        <table className="timetable-table">
+          <thead>
+            <tr>
+              <th></th>
+              {days.map(day => <th key={day}>{day}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {hours.map(hour => (
+              <tr key={hour}>
+                <td className="time-label-cell">{hour > 12 ? hour - 12 : hour}</td>
+                {days.map(day => (
+                  <td key={day} className="event-cell">
+                    {events
+                      .filter(event => event.day === day && parseInt(event.startTime.split(':')[0]) === hour)
+                      .map(event => {
+                        const startMinutes = timeToMinutes(event.startTime) - hour * 60;
+                        const durationMinutes = timeToMinutes(event.endTime) - timeToMinutes(event.startTime);
+                        const top = (startMinutes / 60) * 100;
+                        const height = (durationMinutes / 60) * 100;
 
-          {/* Render Event Blocks */}
-          {events.map(event => {
-            const startRow = timeToRow(event.startTime);
-            const endRow = timeToRow(event.endTime);
-            const column = dayToIndex[event.day];
-            return (
-              <div
-                key={event.id}
-                className="event-block"
-                style={{
-                  gridRowStart: startRow,
-                  gridRowEnd: endRow,
-                  gridColumn: column,
-                  backgroundColor: event.color
-                }}
-                onClick={() => openEditModal(event)}
-              >
-                {event.name}
-              </div>
-            );
-          })}
-        </div>
+                        return (
+                          <div
+                            key={event.id}
+                            className="event-block"
+                            style={{
+                              top: `${top}%`,
+                              height: `${height}%`,
+                              backgroundColor: event.color,
+                            }}
+                            onClick={() => openEditModal(event)} // 클릭 시 수정 모달 열기
+                          >
+                            <strong>{event.name}</strong>
+                            <span>{event.place}</span>
+                          </div>
+                        );
+                      })}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </main>
-
       {isModalOpen && (
         <ScheduleModal
-          event={selectedEvent}
+          eventToEdit={eventToEdit}
           onSave={handleSaveEvent}
           onClose={() => setIsModalOpen(false)}
           onDelete={handleDeleteEvent}

@@ -21,9 +21,9 @@
 }
 .timetable-main {
   flex-grow: 1;
-  overflow: auto;
+  overflow-y: auto;
   padding: 15px;
-  background-color: #fff;
+  background-color: #f8f9fa;
 }
 .manage-button {
   width: 100%;
@@ -40,86 +40,102 @@
   display: block;
 }
 
-/* --- 에브리타임 스타일 그리드 (비율 수정) --- */
-.timetable-grid-wrapper {
+/* --- Table 기반 시간표 스타일 --- */
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e0e0e0;
+  table-layout: fixed;
   background-color: #fff;
-  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
 }
-.timetable-grid {
-  display: grid;
-  grid-template-columns: 30px repeat(5, 1fr);
-  grid-template-rows: 30px repeat(8, 1fr); 
-  height: 70vh;
-  min-height: 500px; 
-  max-height: 700px;
-  position: relative;
-}
-.grid-day-header {
+.timetable-table th, .timetable-table td {
+  border: 1px solid #f0f0f0;
   text-align: center;
+  vertical-align: top;
+  /* 수정: .event-cell에만 position: relative 적용 */
+}
+.timetable-table th {
+  height: 30px;
   font-size: 0.8em;
   font-weight: 500;
   color: var(--sub-text-color);
-  padding-top: 8px;
-  border-bottom: 1px solid var(--border-color);
-  border-left: 1px solid var(--border-color);
+  border-bottom: 1px solid #e0e0e0;
 }
-.grid-time-label {
-  text-align: right;
-  padding-right: 5px;
+.time-label-cell {
+  width: 35px;
   font-size: 0.75em;
   color: var(--sub-text-color);
-  border-right: 1px solid var(--border-color);
-  padding-top: 2px;
+  padding-top: 4px;
+  border-right: 1px solid #e0e0e0;
 }
-.grid-cell {
-  border-top: 1px solid #f0f0f0;
-  border-left: 1px solid var(--border-color);
+.event-cell {
+  height: 60px;
+  position: relative; /* 수정: 이벤트 블록의 기준점이 되도록 설정 */
 }
 .event-block {
-  position: static;
-  width: 100%;
-  height: 100%;
-  color: #444444;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.7em;
+  position: absolute;
+  width: calc(100% - 4px);
+  left: 2px;
+  color: white;
+  padding: 6px;
+  font-size: 0.8em;
+  font-weight: 500;
+  line-height: 1.3;
+
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 0.5px solid #222; /* 검은색 테두리 */ 
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.4;
-  justify-content: center;
-  align-items: flex-start;
-  box-sizing: border-box;
-  margin: 0;
-  transition: box-shadow 0.2s, transform 0.2s;
-  background: #f5f5f5; /* JS에서 덮어씀 */
 
-  /* 수정: 파란색 아웃라인 제거 */
-  outline: none;
+  border-radius: 4px;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  /* 수정: height에도 transition 추가 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, height 0.2s ease;
 }
 
-.event-block strong {
-  font-weight: bold;
-  font-size: 1.07em;
+.event-cell:hover .event-block {
+  top: 0 !important;
+  left: 2px;
+  width: calc(100% - 4px);
+  height: auto !important;    /* 셀 높이 대신 내용에 맞게 확장 */
+  min-height: 60px;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 10;
+  white-space: normal;
+  overflow: visible;
 }
 
 .event-block:hover {
-  box-shadow: 0 2px 16px rgba(0,0,0,0.13);
-  transform: scale(1.03);
-  cursor: pointer;
+  /* ...기존 스타일... */
+  white-space: normal;      /* 줄바꿈 허용 */
+  overflow: visible;        /* 내용이 잘리지 않게 */
+  z-index: 20;
 }
-/* 추가: 포커스 시에도 아웃라인 제거 */
-.event-block:focus {
-  outline: none;
-  /* 원한다면 포커스 시 다른 시각적 효과 추가 */
-  /* box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); */
+
+.event-block:hover .event-name,
+.event-block:hover .event-details {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.event-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.event-details {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+/* 추가: 부모(.event-cell)에 hover 시 자식 텍스트 줄바꿈 허용 */
+.event-cell:hover .event-name,
+.event-cell:hover .event-details {
+  white-space: normal;
 }
