@@ -7,7 +7,10 @@ import { NavigationProvider } from './context/NavigationContext';
 
 import AnimatedPage from './components/AnimatedPage';
 import BottomNavBar from './components/BottomNavBar'; // BottomNavBar 임포트
-// ... (다른 페이지 임포트)
+import SellHistoryPage from './pages/SellHistoryPage';
+import BuyHistoryPage from './pages/BuyHistoryPage';
+import ReputationPage from './pages/ReputationPage';
+import AccountSettingsPage from './pages/AccountSettingsPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
@@ -32,7 +35,7 @@ function App() {
       <main style={{flex: 1, position: 'relative'}}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            {/* ... 모든 Route 경로는 그대로 ... */}
+            
             <Route path="/" element={<AnimatedPage><HomePage /></AnimatedPage>} />
             <Route path="/login" element={<AnimatedPage><LoginPage /></AnimatedPage>} />
             <Route path="/signup" element={<AnimatedPage><SignUpPage /></AnimatedPage>} />
@@ -44,6 +47,11 @@ function App() {
             <Route path="/timetable/manage" element={<AnimatedPage><TimetableManagePage /></AnimatedPage>} />
             <Route path="/chat" element={<AnimatedPage><ChatListPage /></AnimatedPage>} />
             <Route path="/chat/:chatId" element={<AnimatedPage><ChatRoomPage /></AnimatedPage>} />
+            <Route path="/history/sell" element={<AnimatedPage><SellHistoryPage /></AnimatedPage>} />
+            <Route path="/history/buy" element={<AnimatedPage><BuyHistoryPage /></AnimatedPage>} />
+            <Route path="/reputation" element={<AnimatedPage><ReputationPage /></AnimatedPage>} />
+            <Route path="/settings/account" element={<AnimatedPage><AccountSettingsPage /></AnimatedPage>} />
+
           </Routes>
         </AnimatePresence>
       </main>

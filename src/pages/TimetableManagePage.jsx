@@ -29,7 +29,7 @@ function TimetableManagePage() {
     if (eventData.id) { // 수정
       setEvents(events.map(e => e.id === eventData.id ? eventData : e));
     } else { // 추가
-      setEvents([...events, { ...eventData, id: Date.now(), place: '장소 미정' }]);
+      setEvents([...events, { ...eventData, id: Date.now() }]);
     }
   };
 

@@ -134,7 +134,7 @@
   font-size: 0.9em;
   opacity: 0.8;
 }
-/* 추가: 부모(.event-cell)에 hover 시 자식 텍스트 줄바꿈 허용 */
+
 .event-cell:hover .event-name,
 .event-cell:hover .event-details {
   white-space: normal;

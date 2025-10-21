@@ -32,6 +32,7 @@
   cursor: pointer;
   font-size: 0.9em;
 }
+
 .timetable-manage-main {
   flex-grow: 1;
   overflow-y: auto;

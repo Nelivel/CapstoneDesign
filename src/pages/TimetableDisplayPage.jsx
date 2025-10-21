@@ -67,6 +67,7 @@ function TimetableDisplayPage() {
                               <div>{event.startTime} - {event.endTime}</div>
                             </div>
                           </div>
+                          
                         );
                       })}
                   </td>

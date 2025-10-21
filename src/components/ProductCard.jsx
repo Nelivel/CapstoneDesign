@@ -1,24 +1,23 @@
 // src/components/ProductCard.jsx
-import React, { useState } from 'react'; // useState 추가
+import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import './ProductCard.css';
+import './ProductCard.css'; // CSS 파일 임포트 확인
 
 function ProductCard({ product }) {
   const { navigate } = useNavigation();
-  // 임시로 관심 상품 상태 관리 (실제는 백엔드 연동)
-  const [isFavorite, setIsFavorite] = useState(false); // 예시: 초기값 false
+  const [isFavorite, setIsFavorite] = useState(false); // 예시 상태
 
   const handleCardClick = () => navigate(`/product/${product.id}`);
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트가 부모로 전파되는 것을 막음
+    e.stopPropagation(); // 하트 클릭 시 카드 전체 클릭 방지
     setIsFavorite(!isFavorite);
-    alert(`${product.title}이(가) ${isFavorite ? '관심 상품에서 해제' : '관심 상품에 등록'}되었습니다!`);
-    // 실제로는 여기에 관심 상품 API 호출 로직이 들어갑니다.
+    alert(`${product.title} ${isFavorite ? '관심 해제' : '관심 등록'}!`);
   };
 
   return (
-    <button onClick={handleCardClick} className="product-card-button">
+    // 바깥 요소를 div로 되돌리고 onClick을 여기에 적용
+    <div onClick={handleCardClick} className="product-card-item"> {/* button을 div로 변경, 클래스 이름 변경 */}
       <img src={product.imageUrl} alt={product.title} className="product-card-image" />
       <div className="product-card-details">
         <div className="product-card-header">
@@ -26,14 +25,15 @@ function ProductCard({ product }) {
           <span className="product-card-nickname">•{product.nickname}</span>
         </div>
         <p className="product-card-description">{product.description}</p>
+        {/* 즐겨찾기 버튼은 그대로 button 유지 */}
         <button
           onClick={handleFavoriteClick}
           className={`favorite-icon ${isFavorite ? 'is-favorite' : ''}`}
         >
-          {isFavorite ? '❤️' : '🤍'} {/* 꽉 찬 하트 / 빈 하트 */}
+          {isFavorite ? '❤️' : '🤍'}
         </button>
       </div>
-    </button>
+    </div>
   );
 }
 
