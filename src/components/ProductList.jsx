@@ -1,17 +1,20 @@
 // src/components/ProductList.jsx
 import React from 'react';
 import ProductCard from './ProductCard';
-import { useGlobalData } from '../context/GlobalContext'; // 1. 임포트
+// import { useGlobalData } from '../context/GlobalContext'; // 제거
 
-function ProductList() {
-  const { products } = useGlobalData(); // 2. 컨텍스트에서 상품 목록 가져오기
+function ProductList({ products }) { // props로 products 받기
+  // const { products } = useGlobalData(); // 제거
 
   return (
-    <div style={{ width: '90%', margin: '20px auto' }}>
-      {/* 3. 컨텍스트의 products 사용 */}
-      {products.map(product => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+    <div style={{ width: '100%', margin: '20px 0' }}> {/* 너비/마진 조정 */}
+      {products && products.length > 0 ? (
+        products.map(product => (
+          <ProductCard key={product.id} product={product} />
+        ))
+      ) : (
+        <p>등록된 상품이 없습니다.</p> // 상품 없을 때 메시지
+      )}
     </div>
   );
 }

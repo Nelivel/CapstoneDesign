@@ -105,3 +105,10 @@
 .login-options .link-button {
   padding: 0; /* 링크 버튼 패딩 제거 */
 }
+.error-message {
+  color: #e53e3e; /* 붉은색 */
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: -5px; /* 버튼과의 간격 조정 */
+  margin-bottom: 10px;
+}
