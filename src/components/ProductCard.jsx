@@ -1,31 +1,59 @@
 // src/components/ProductCard.jsx
 import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import './ProductCard.css'; // CSS 파일 임포트 확인
+import { useGlobalData } from '../context/GlobalContext';
+import { formatTimeAgo } from '../utils/timeUtils'; // 1. 유틸리티 임포트
+import './ProductCard.css';
+import ProductMenuModal from './ProductMenuModal';
 
 function ProductCard({ product }) {
   const { navigate } = useNavigation();
-  const [isFavorite, setIsFavorite] = useState(false); // 예시 상태
+  const { favorites, toggleFavorite } = useGlobalData();
+  const isFavorite = favorites.has(product.id);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleCardClick = () => navigate(`/product/${product.id}`);
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); // 하트 클릭 시 카드 전체 클릭 방지
-    setIsFavorite(!isFavorite);
-    alert(`${product.title} ${isFavorite ? '관심 해제' : '관심 등록'}!`);
+    e.stopPropagation();
+    toggleFavorite(product.id);
+  };
+
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(true);
+  };
+
+  const handleReport = () => {
+    setIsMenuOpen(false);
+    alert(`${product.title} 상품이 신고되었습니다.`);
+  };
+
+  const getStatusText = (status, price) => {
+    if (status === 'reserved') return '예약 중';
+    if (status === 'sold') return '판매 완료';
+    return typeof price === 'number' ? `${price.toLocaleString('ko-KR')}원` : '가격 문의';
   };
 
   return (
-    // 바깥 요소를 div로 되돌리고 onClick을 여기에 적용
-    <div onClick={handleCardClick} className="product-card-item"> {/* button을 div로 변경, 클래스 이름 변경 */}
-      <img src={product.imageUrl} alt={product.title} className="product-card-image" />
-      <div className="product-card-details">
-        <div className="product-card-header">
+    <>
+      <div onClick={handleCardClick} className="product-card-item">
+        <img src={product.imageUrl} alt={product.title} className="product-card-image" />
+        <div className="product-card-details">
           <h3 className="product-card-title">{product.title}</h3>
-          <span className="product-card-nickname">•{product.nickname}</span>
+          {/* 2. 닉네임과 시간 표시를 한 줄로 묶음 */}
+          <div className="product-card-meta">
+            <span className="product-card-nickname">{product.nickname}</span>
+            {/* 3. 시간 표시 (formatTimeAgo 사용) */}
+            <span className="product-card-time">• {formatTimeAgo(product.createdAt)}</span>
+          </div>
+          <div className={`product-card-price ${product.status !== 'selling' ? 'sold' : ''}`}>
+            {getStatusText(product.status, product.price)}
+          </div>
         </div>
-        <p className="product-card-description">{product.description}</p>
-        {/* 즐겨찾기 버튼은 그대로 button 유지 */}
+        <button className="kebab-menu-button" onClick={handleMenuClick}>
+          ⋮
+        </button>
         <button
           onClick={handleFavoriteClick}
           className={`favorite-icon ${isFavorite ? 'is-favorite' : ''}`}
@@ -33,7 +61,13 @@ function ProductCard({ product }) {
           {isFavorite ? '❤️' : '🤍'}
         </button>
       </div>
-    </div>
+      {isMenuOpen && (
+        <ProductMenuModal
+          onClose={() => setIsMenuOpen(false)}
+          onReport={handleReport}
+        />
+      )}
+    </>
   );
 }
 

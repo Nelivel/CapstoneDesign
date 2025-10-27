@@ -1,11 +1,12 @@
 // src/pages/ChatRoomPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom'; // 1. useLocation 임포트
 import { useNavigation } from '../context/NavigationContext';
-import { MOCK_CHAT_ROOMS, MOCK_MESSAGES, MOCK_TRADE_SCHEDULES } from '../mock-chats'; // MOCK_TRADE_SCHEDULES 임포트
-import { MOCK_PRODUCTS } from '../mock-products'; // 상품 정보 임포트
-import ChatFeaturesModal from '../components/ChatFeaturesModal'; // 기능 모달 임포트
-import TradeScheduleRecommendModal from '../components/TradeScheduleRecommendModal'; // 일정 추천 모달 임포트
+import { useGlobalData } from '../context/GlobalContext'; // 2. 임포트
+import { MOCK_CHAT_ROOMS, MOCK_MESSAGES, MOCK_TRADE_SCHEDULES } from '../data/chats'; // 3. 경로 수정
+// import { MOCK_PRODUCTS } from '../mock-products'; // 4. 삭제
+import ChatFeaturesModal from '../components/ChatFeaturesModal';
+import TradeScheduleRecommendModal from '../components/TradeScheduleRecommendModal';
 import './ChatRoomPage.css';
 
 const MY_USER_ID = 'me';
@@ -13,24 +14,32 @@ const MY_USER_ID = 'me';
 function ChatRoomPage() {
   const { chatId } = useParams();
   const { navigate } = useNavigation();
+  const location = useLocation(); // 5. location 훅 사용
+
+  // 6. 컨텍스트에서 전체 상품 목록 가져오기
+  const { products } = useGlobalData(); 
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const messageEndRef = useRef(null);
 
   // 모달 상태 관리
   const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false); // 이름을 isScheduleModalOpen으로 통일
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   const roomInfo = MOCK_CHAT_ROOMS.find(room => room.id === parseInt(chatId));
-  // roomInfo가 없을 경우를 대비하여 nullish coalescing operator 사용
-  const productInfo = MOCK_PRODUCTS.find(p => p.id === roomInfo?.productId);
+  
+  // 7. DetailPage에서 받은 productId(location.state) 또는 채팅방 기본 productId
+  const productId = location.state?.productId || roomInfo?.productId;
+  
+  // 8. 컨텍스트의 products에서 상품 정보 찾기
+  const productInfo = products.find(p => p.id === productId);
 
   useEffect(() => {
     const chatMessages = MOCK_MESSAGES[chatId] || [];
     const tradeSchedules = MOCK_TRADE_SCHEDULES[chatId] || [];
 
-    // 메시지와 거래 일정을 합치고 id (생성 시간) 순으로 정렬
-    // (여기서는 type이 다른 두 배열을 합치므로, id가 같은 경우가 없다고 가정)
+    // ... (기존 로직 동일)
     const combined = [...chatMessages, ...tradeSchedules].sort((a, b) => a.id - b.id);
     setMessages(combined);
   }, [chatId]);
@@ -51,8 +60,6 @@ function ChatRoomPage() {
     };
     setMessages(prevMessages => [...prevMessages, newMsg]);
     setNewMessage('');
-    
-    // 실제 앱에서는 여기서 웹소켓을 통해 메시지를 서버로 전송합니다.
   };
 
   const handleFeatureSelect = (feature) => {
@@ -62,7 +69,7 @@ function ChatRoomPage() {
     }
   };
 
-  // 거래 일정 선택 후 메시지로 보내는 함수 (거래 일정 추천 모달에서 호출)
+  // ... (handleScheduleSelect, renderTradeScheduleMessage 함수 동일) ...
   const handleScheduleSelect = (schedule) => {
     const newScheduleMessage = {
       id: Date.now(),
@@ -78,7 +85,7 @@ function ChatRoomPage() {
     setIsScheduleModalOpen(false); // 모달 닫기
   };
 
-  if (!roomInfo || !productInfo) { // productInfo가 없을 경우를 대비한 렌더링 가드
+  if (!roomInfo) { // productInfo는 없을 수도 있으니 roomInfo만 체크
     return <div>채팅방 정보를 찾을 수 없습니다.</div>;
   }
 
@@ -91,7 +98,7 @@ function ChatRoomPage() {
 
     return (
       <div key={schedule.id} className={`message-row ${isMine ? 'mine' : 'partner'}`}>
-        {isMine && ( // 내가 보낸 메시지일 경우 시간, 읽음 상태를 왼쪽에
+        {isMine && ( 
           <div className="message-meta">
             {schedule.isRead ? null : <span className="message-read-status">1</span>}
             <span>{schedule.timestamp}</span>
@@ -103,29 +110,29 @@ function ChatRoomPage() {
             <p><strong>장소:</strong> {schedule.location}</p>
             <p><strong>시간:</strong> {schedule.time}</p>
           </div>
-          {isPending && !isMine && ( // 상대방이 보낸 제안이고, 아직 수락/거절되지 않았을 때만 버튼 표시
+          {isPending && !isMine && ( 
             <div className="buttons">
               <button className="reject-button" onClick={() => alert('거절 기능')}>거절</button>
               <button className="accept-button" onClick={() => alert('수락 기능')}>수락</button>
             </div>
           )}
-          {isPending && isMine && ( // 내가 보낸 제안이고, 아직 수락/거절되지 않았을 때
+          {isPending && isMine && ( 
             <div className="buttons">
               <button className="default-button" disabled>상대방 응답 대기중</button>
             </div>
           )}
-           {isAccepted && ( // 확정된 경우
+           {isAccepted && (
             <div className="buttons">
               <button className="accept-button" disabled>거래 확정됨</button>
             </div>
           )}
-          {isRejected && ( // 거절된 경우
+          {isRejected && (
             <div className="buttons">
               <button className="reject-button" disabled>거래 거절됨</button>
             </div>
           )}
         </div>
-        {!isMine && ( // 상대방이 보낸 메시지일 경우 시간, 읽음 상태를 오른쪽에 (현재는 없음)
+        {!isMine && (
           <div className="message-meta">
             <span>{schedule.timestamp}</span>
           </div>
@@ -133,6 +140,7 @@ function ChatRoomPage() {
       </div>
     );
   };
+
 
   return (
     <div className="chat-room-page">
@@ -150,7 +158,6 @@ function ChatRoomPage() {
             const isMine = msg.sender === MY_USER_ID;
             return (
               <div key={msg.id} className={`message-row ${isMine ? 'mine' : 'partner'}`}>
-                {/* 내 메시지일 경우 시간, 읽음 상태를 왼쪽에 */}
                 {isMine && (
                   <div className="message-meta">
                     {msg.isRead ? null : <span className="message-read-status">1</span>}
@@ -160,7 +167,6 @@ function ChatRoomPage() {
                 <div className={`message-bubble ${isMine ? 'mine' : 'partner'}`}>
                   {msg.text}
                 </div>
-                {/* 상대 메시지일 경우 시간, 읽음 상태를 오른쪽에 */}
                 {!isMine && (
                   <div className="message-meta">
                     <span>{msg.timestamp}</span>
@@ -179,7 +185,7 @@ function ChatRoomPage() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="메시지를 입력하세요..."
-            rows={1} // 기본 1줄
+            rows={1}
           />
           <button type="submit" className="chat-send-button">전송</button>
         </form>
@@ -190,13 +196,12 @@ function ChatRoomPage() {
         <ChatFeaturesModal
           onClose={() => setIsFeaturesModalOpen(false)}
           onFeatureSelect={handleFeatureSelect}
-          // productInfo가 존재할 때만 sellerHasTimetable을 전달
+          // 9. 컨텍스트에서 찾은 productInfo 사용
           sellerHasTimetable={productInfo ? productInfo.sellerHasTimetable : false} 
         />
       )}
       {isScheduleModalOpen && (
         <TradeScheduleRecommendModal
-          // roomInfo가 존재할 때만 partnerNickname을 전달
           partnerNickname={roomInfo ? roomInfo.partner.nickname : ''} 
           onClose={() => setIsScheduleModalOpen(false)}
           onScheduleSelect={handleScheduleSelect}

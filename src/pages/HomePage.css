@@ -8,61 +8,102 @@
 .home-header {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* 1. 로고와 액션 영역 양 끝 정렬 */
   padding: 10px 15px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  height: 130px; /* 2. 헤더 높이 확보 (로고 크기 고려) */
 }
-.home-header .logo { /* 로고 스타일 */
-  width: 30px; height: 30px; border-radius: 50%;
-  background-color: var(--primary-color);
+
+/* 3. 로고 크기 100px 적용 (사용자 확인) */
+.home-header .logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: transparent;
+  /* margin-right 제거 */
 }
-.home-header .search-bar { /* 검색창 */
-  flex-grow: 1; margin: 0 10px; padding: 8px 15px;
-  border-radius: 20px; background-color: #f0f0f0;
-  text-align: left; color: var(--sub-text-color); font-size: 0.9em;
+
+/* 4. 기존 .search-bar, .alert-icon 스타일 제거 */
+/* .home-header .search-bar { ... } */
+/* .home-header .alert-icon { ... } */
+
+/* 5. 헤더 오른쪽 액션 영역 스타일 (신규) */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* 아이콘 버튼 사이 간격 */
+  /* 로고 크기 때문에 아이콘들이 아래로 밀리지 않도록 */
+  align-self: flex-start; /* 헤더 상단에 아이콘들 정렬 */
+  margin-top: 5px; /* 상단 여백 약간 추가 */
 }
-.home-header .alert-icon { /* 알림 아이콘 */
-   width: 30px; height: 30px; border-radius: 50%;
-   background-color: #f0f0f0; margin-right: 10px;
+
+/* 6. 공통 헤더 아이콘 버튼 스타일 (신규) */
+.header-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 1.6em; /* 아이콘 크기 키움 */
+  color: var(--text-color);
+  position: relative; /* 알림 뱃지 위치 기준 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.login-button { /* 로그인 버튼 */
-  padding: 5px 10px; background-color: transparent;
-  border: 1px solid var(--primary-color); border-radius: 5px;
-  color: var(--primary-color); cursor: pointer; font-weight: bold;
+.header-button:hover {
+  opacity: 0.7; /* 간단한 호버 효과 */
 }
-.category-bar { /* 카테고리 바 */
+
+/* 7. 검색, 알림 버튼 개별 스타일 (필요 시 추가) */
+.search-button {
+  /* 추가 스타일 없음 */
+}
+.alert-button {
+  /* 추가 스타일 없음 */
+}
+
+/* 알림 뱃지 예시 스타일 (신규) */
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 0px;
+  background-color: #e53e3e; /* 붉은색 */
+  color: white;
+  font-size: 0.6em; /* 작은 폰트 */
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* --- 이하 스타일은 기존과 동일 --- */
+.category-bar {
   display: flex; gap: 10px; padding: 10px 15px;
   border-bottom: 1px solid var(--border-color); flex-shrink: 0;
-  overflow-x: auto; /* 카테고리가 많아지면 스크롤 */
+  overflow-x: auto;
 }
 .category-button {
   padding: 6px 12px; border: 1px solid var(--border-color);
   border-radius: 20px; background-color: #fff;
   font-size: 0.9em; white-space: nowrap;
 }
-.home-main { /* 메인 콘텐츠 영역 (스크롤) */
+.home-main {
   flex-grow: 1; overflow-y: auto; position: relative;
   padding: 0 15px;
 }
-.write-button { /* 글쓰기 버튼 */
-  position: fixed; 
-  bottom: 80px; /* 하단 네비게이션 바 높이를 고려한 위치 */
-  right: calc(50% - 180px); /* .app-container 중앙 기준으로 우측 정렬 */
+.write-button {
+  position: fixed;
+  bottom: 80px;
+  right: calc(50% - 180px);
   width: 100px; height: 45px; border-radius: 25px;
   background-color: var(--primary-color); color: white;
   border: none; display: flex; justify-content: center;
   align-items: center; font-weight: bold; font-size: 1em;
   cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10;
 }
-.bottom-nav { /* 하단 네비게이션 */
-  display: flex; justify-content: space-around;
-  padding: 10px 0; border-top: 1px solid var(--border-color);
-  background-color: #fff; flex-shrink: 0;
-}
-.nav-button {
-  background: none; border: none; cursor: pointer;
-  padding: 5px 10px; border-radius: 5px;
-  font-size: 0.9em; color: var(--sub-text-color);
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-}
-.nav-button:hover { background-color: #f0f0f0; }

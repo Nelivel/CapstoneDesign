@@ -1,6 +1,7 @@
 // src/components/TradeScheduleRecommendModal.jsx
 import React, { useState, useEffect } from 'react';
-import { MOCK_USERS } from '../mock-users';
+import { MOCK_USERS } from '../data/users'; // 1. 경로 수정
+import { useGlobalData } from '../context/GlobalContext'; // 2. 임포트
 import './TradeScheduleRecommendModal.css';
 
 // 시나리오 A-1, A-2, E-1 구현
@@ -8,12 +9,15 @@ function TradeScheduleRecommendModal({ partnerNickname, onClose, onScheduleSelec
   const [recommendations, setRecommendations] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
+  const { user } = useGlobalData(); // 3. 컨텍스트에서 현재 유저 정보 가져오기
+
   // 컴포넌트 마운트 시 시간표를 분석하여 추천 생성 (A-1)
   useEffect(() => {
-    const myTimetable = MOCK_USERS['me'].timetable;
+    // const myTimetable = MOCK_USERS['me'].timetable; // 4. 삭제
+    const myTimetable = user.timetable; // 5. 컨텍스트의 유저 시간표 사용
     const partnerTimetable = MOCK_USERS[partnerNickname]?.timetable;
 
-    if (!partnerTimetable) return; // E-1 (이미 ChatFeaturesModal에서 막았지만, 안전장치)
+    if (!myTimetable || !partnerTimetable) return; // E-1 (내 시간표가 없을 수도 있음)
 
     const commonSlots = [];
     const days = ['월', '화', '수', '목', '금'];
@@ -26,7 +30,7 @@ function TradeScheduleRecommendModal({ partnerNickname, onClose, onScheduleSelec
     }
     // 상위 3개만 추천 (임시 로직)
     setRecommendations(commonSlots.slice(0, 3));
-  }, [partnerNickname]);
+  }, [partnerNickname, user]); // 6. user를 dependency array에 추가
 
   const handleConfirm = () => {
     if (selectedSchedule) {

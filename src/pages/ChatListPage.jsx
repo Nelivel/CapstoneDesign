@@ -1,7 +1,7 @@
 // src/pages/ChatListPage.jsx
 import React from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import { MOCK_CHAT_ROOMS } from '../mock-chats';
+import { MOCK_CHAT_ROOMS } from '../data/chats'; // 1. 경로 수정
 import './ChatListPage.css';
 
 function ChatListPage() {

@@ -2,16 +2,21 @@
 import React from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import ProductCard from '../components/ProductCard';
-import { MOCK_PRODUCTS } from '../mock-products';
+// import { MOCK_PRODUCTS } from '../mock-products'; // 1. 삭제
+import { useGlobalData } from '../context/GlobalContext'; // 2. 임포트
 import './FavoriteProductsPage.css';
 
-const MOCK_FAVORITE_PRODUCT_IDS = [1, 3, 5];
+// const MOCK_FAVORITE_PRODUCT_IDS = [1, 3, 5]; // 3. 삭제
 
 function FavoriteProductsPage() {
   const { navigate } = useNavigation();
 
-  const favoriteProducts = MOCK_PRODUCTS.filter(product =>
-    MOCK_FAVORITE_PRODUCT_IDS.includes(product.id)
+  // 4. 컨텍스트에서 상품 목록과 관심 목록 Set 가져오기
+  const { products, favorites } = useGlobalData();
+
+  // 5. 컨텍스트 데이터를 기반으로 관심 상품 필터링
+  const favoriteProducts = products.filter(product =>
+    favorites.has(product.id)
   );
 
   return (

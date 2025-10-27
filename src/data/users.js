@@ -1,8 +1,14 @@
-// src/mock-users.js
+// src/data/users.js
+// (기존 mock-users.js 대체)
+
+import { m } from "framer-motion";
+
 export const MOCK_USERS = {
-  me: { // 현재 로그인한 사용자
+  me: {
     id: 'me',
-    nickname: '나',
+    nickname: '나 (김민준)', // MyPage에서 사용할 닉네임
+    school: '신한대학교 인증 완료', // MyPage에서 사용할 인증 상태
+    mannerCredits: 3.8, // 매너학점으로 변경
     timetable: {
       '월': [0, 1, 1, 0, 0, 1, 0, 0, 0, 0], // 0:불가능, 1:가능
       '화': [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -14,6 +20,7 @@ export const MOCK_USERS = {
   스터디홀릭: {
     id: '스터디홀릭',
     nickname: '스터디홀릭',
+    mannerCredits: 4.2,
     timetable: {
       '월': [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
       '화': [0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
@@ -25,6 +32,7 @@ export const MOCK_USERS = {
   경영새내기: {
     id: '경영새내기',
     nickname: '경영새내기',
+    mannerCredits: 3.9,
     timetable: {
       '월': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
       '화': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -36,6 +44,18 @@ export const MOCK_USERS = {
   시간표_미제공자: { // E-1 테스트용
     id: '시간표_미제공자',
     nickname: '시간표_미제공자',
+    timetable: null, // 시간표 정보가 없음
+  },
+  글로벌리: {
+    id: '글로벌리',
+    nickname: '글로벌리',
+    mannerCredits: 4.0,
+    timetable: null, // 시간표 정보가 없음
+  },
+  긱스가든: {
+    id: '긱스가든',
+    nickname: '긱스가든',
+    mannerCredits: 3.3,
     timetable: null, // 시간표 정보가 없음
   }
 };

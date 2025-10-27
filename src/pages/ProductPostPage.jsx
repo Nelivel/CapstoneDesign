@@ -1,10 +1,13 @@
 // src/pages/ProductPostPage.jsx
 import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
+import { useGlobalData } from '../context/GlobalContext'; // 1. 임포트
 import './ProductPostPage.css'; // CSS 파일 임포트 확인
 
 function ProductPostPage() {
   const { navigate } = useNavigation();
+  const { addProduct } = useGlobalData(); // 2. 컨텍스트에서 addProduct 함수 가져오기
+
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
@@ -12,8 +15,17 @@ function ProductPostPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = { title, category, price, description };
-    console.log('제출된 상품 정보:', formData);
+    
+    // 3. GlobalContext의 addProduct 함수로 새 상품 데이터 전달
+    addProduct({
+      title,
+      category, // (카테고리는 현재 Product 모델에 없지만, 추가 가능)
+      price: Number(price),
+      description,
+      status: 'selling', // 기본 상태
+    });
+
+    console.log('제출된 상품 정보:', { title, category, price, description });
     alert('상품이 등록되었습니다! (콘솔 확인)');
     navigate('/');
   };

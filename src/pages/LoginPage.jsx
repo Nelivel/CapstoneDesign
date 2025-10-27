@@ -8,8 +8,9 @@ function LoginPage() {
 
   return (
     <div className="login-page">
-      <button onClick={() => navigate('/')} className="back-button">{'<'}</button>
-      <h1 className="login-logo">메인 로고</h1>
+      
+      <img src="/logo.png" alt="책상정리 로고" className="login-logo" />
+
       <div className="login-form">
         <input type="email" placeholder="이메일 입력" className="login-input" />
         <input type="password" placeholder="비밀번호 입력" className="login-input" />

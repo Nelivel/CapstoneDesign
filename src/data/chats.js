@@ -1,6 +1,7 @@
-// src/mock-chats.js
+// src/data/chats.js
+// (기존 mock-chats.js 대체)
+// productId가 products.js와 일치하도록 확인
 
-// 채팅방 목록 데이터
 export const MOCK_CHAT_ROOMS = [
   {
     id: 1,
@@ -11,7 +12,7 @@ export const MOCK_CHAT_ROOMS = [
     lastMessage: '네, 그럼 내일 뵙겠습니다!',
     timestamp: '오후 4:30',
     unreadCount: 0,
-    productId: 1, // 거래 중인 상품 ID (거래 일정 추천에 사용)
+    productId: 1, // 거래 중인 상품 ID (컴퓨터 구조론)
   },
   {
     id: 2,
@@ -22,7 +23,7 @@ export const MOCK_CHAT_ROOMS = [
     lastMessage: '혹시 네고 가능할까요?',
     timestamp: '오전 11:21',
     unreadCount: 2,
-    productId: 2, // 거래 중인 상품 ID
+    productId: 2, // 거래 중인 상품 ID (회계원리)
   },
   {
     id: 3,
@@ -33,7 +34,7 @@ export const MOCK_CHAT_ROOMS = [
     lastMessage: '안녕하세요',
     timestamp: '오전 9:00',
     unreadCount: 0,
-    productId: 3, // 이 상품 판매자는 시간표를 제공하지 않는다고 가정 (E-1 테스트용)
+    productId: 3, // 이 상품 판매자는 시간표를 제공하지 않음 (자바스크립트)
   },
 ];
 

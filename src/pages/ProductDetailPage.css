@@ -3,65 +3,202 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: #fff;
 }
 .detail-header {
   display: flex;
   align-items: center;
   padding: 10px 15px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #f0f0f0;
   flex-shrink: 0;
-}
-.detail-header-title {
-  flex-grow: 1;
-  text-align: center;
-  font-size: 1.1em;
-  font-weight: 600;
-  padding-right: 30px; /* 뒤로가기 버튼 공간 확보 */
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .detail-main {
   flex-grow: 1;
   overflow-y: auto;
+  padding-bottom: 80px; /* 푸터 높이 고려 */
 }
-.detail-image {
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-}
+
+/* --- 판매자 프로필 --- */
 .seller-profile {
   display: flex;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid var(--border-color);
+  /* border-bottom 제거 또는 약하게 변경 가능, 이미지와 바로 붙이기 위해 */
+  /* border-bottom: 1px solid var(--border-color); */
+  /* margin-bottom: 10px; */ /* 이미지와의 간격 필요시 추가 */
 }
 .seller-avatar {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background-color: #eee;
-  margin-right: 10px;
+  margin-right: 12px;
 }
-.seller-info .nickname { font-weight: bold; }
-.seller-info .status { font-size: 0.9em; color: var(--sub-text-color); }
-
-.product-content { padding: 20px 15px; }
-.product-content .title { font-size: 1.4em; font-weight: bold; margin-bottom: 15px; }
-.product-content .description { line-height: 1.6; min-height: 100px; }
-
-.detail-footer {
+.seller-info {
+  flex-grow: 1;
+}
+.seller-info .nickname {
+  font-weight: 600;
+  font-size: 1.05em;
+  margin-bottom: 2px;
+}
+.seller-info .location {
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+}
+.manner-section {
   display: flex;
   align-items: center;
-  padding: 15px;
+  gap: 4px;
+  font-size: 0.95em;
+  text-align: right;
+}
+.manner-score {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+.manner-face {
+  font-size: 1.2em;
+}
+
+/* --- 이미지 (위치 변경 후 스타일) --- */
+.detail-image-container {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  /* margin-top: 10px; */ /* 프로필과의 간격 필요시 추가 */
+}
+.detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --- 상품 정보 --- */
+.product-content {
+  padding: 20px 15px;
+  border-top: 1px solid #f0f0f0; /* 이미지가 위로 갔으므로 상단에 구분선 */
+  border-bottom: 1px solid #f0f0f0;
+}
+.product-content .title {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.product-meta-info {
+  font-size: 0.85em;
+  color: var(--sub-text-color);
+  margin-bottom: 15px;
+}
+.product-meta-info span + span {
+  margin-left: 5px;
+}
+.product-content .description {
+  line-height: 1.6;
+  min-height: 100px;
+  font-size: 1em;
+  color: var(--text-color);
+  white-space: pre-wrap;
+}
+
+/* --- 판매자 다른 상품 --- */
+.seller-other-items {
+  padding: 20px 15px;
+}
+/* ... (이하 seller-other-items, detail-footer 스타일 동일) ... */
+.seller-other-items h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.other-items-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.other-item {
+  cursor: pointer;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.other-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.other-item-price {
+  padding: 8px;
+  font-size: 0.9em;
+  font-weight: 600;
+  text-align: center;
+}
+.detail-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
   border-top: 1px solid var(--border-color);
-  gap: 15px;
-  flex-shrink: 0;
+  background-color: #fff;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+  z-index: 10;
+  gap: 10px;
+}
+.footer-fav {
+  position: static;
+  font-size: 1.6em;
+  padding: 5px;
+  color: var(--sub-text-color);
+  margin-right: 5px;
+}
+.footer-fav.is-favorite {
+  color: #e53e3e;
+}
+.price-and-status {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 .detail-price {
   font-size: 1.2em;
   font-weight: bold;
 }
+.status-badge {
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 2px;
+    display: inline-block;
+}
+.status-badge.reserved { background-color: #ffc; border: 1px solid #e6db55; color: #856404; }
+.status-badge.sold { background-color: #ddd; color: #777; }
 .chat-button {
-  flex-grow: 1; padding: 12px;
-  background-color: var(--primary-color); color: white;
-  border: none; border-radius: 8px;
-  font-size: 1em; font-weight: bold; cursor: pointer;
+  flex-grow: 0;
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.chat-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

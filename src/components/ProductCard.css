@@ -1,20 +1,19 @@
 /* src/components/ProductCard.css */
-/* 클래스 이름을 .product-card-button 에서 .product-card-item 으로 변경 */
 .product-card-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   padding: 15px 5px;
   margin: 10px 0;
-  border: none; /* 기본 버튼 테두리 제거 */
+  border: none;
   border-bottom: 1px solid var(--border-color);
   background: none;
-  cursor: pointer; /* 클릭 가능함을 나타내는 커서 추가 */
+  cursor: pointer;
   text-align: left;
-  position: relative; /* 즐겨찾기 아이콘 위치 지정을 위해 유지 */
-  /* 버튼 관련 리셋 스타일이 있었다면 제거 */
+  position: relative;
 }
 .product-card-item:hover { background-color: #f8f8f8; }
+
 .product-card-image {
   width: 80px;
   height: 80px;
@@ -23,30 +22,73 @@
   object-fit: cover;
   flex-shrink: 0;
 }
+
 .product-card-details {
   flex-grow: 1;
-}
-.product-card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 30px;
 }
+
 .product-card-title {
   font-size: 1.1em;
   font-weight: 600;
   color: var(--text-color);
-  /* 제목이 즐겨찾기 아이콘과 겹치지 않도록 오른쪽 패딩 추가 */
-  padding-right: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
 }
+
+/* 1. 닉네임과 시간 묶는 div 스타일 (신규) */
+.product-card-meta {
+  display: flex;
+  align-items: center;
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  gap: 4px; /* 닉네임과 점 사이 간격 */
+}
+
 .product-card-nickname {
-  font-size: 0.9em;
-  color: var(--sub-text-color);
+  /* 기존 스타일 유지 */
 }
+
+/* 2. 시간 스타일 (신규) */
+.product-card-time {
+  /* 기존 스타일 유지 */
+}
+
 .product-card-description {
-  font-size: 0.9em;
-  color: var(--sub-text-color);
+  display: none;
 }
+
+.product-card-price {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-top: 2px;
+}
+
+.product-card-price.sold {
+  color: var(--sub-text-color);
+  font-weight: 500;
+}
+
+.kebab-menu-button {
+  position: absolute;
+  top: 10px;
+  right: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  color: var(--sub-text-color);
+  padding: 5px;
+  line-height: 1;
+  z-index: 2;
+}
+
 .favorite-icon {
   position: absolute;
   bottom: 10px;
@@ -60,5 +102,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2; /* 다른 텍스트 위에 오도록 보장 */
+  z-index: 2;
+}
+
+.favorite-icon.is-favorite {
+  color: #e53e3e;
 }
