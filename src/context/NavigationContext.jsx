@@ -30,6 +30,11 @@ const pageDepths = {
   '/reputation': 3,
   '/settings/account': 3,
   
+  '/admin': 3,
+  '/admin/users': 4, // 사용자 관리 페이지 깊이 추가
+  '/admin/posts': 4,   // 게시글 관리 깊이 추가
+  '/admin/reports': 4, // 신고 관리 깊이 추가
+  
 };
 
 // 하단 탭의 순서

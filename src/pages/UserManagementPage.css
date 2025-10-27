@@ -1,0 +1,104 @@
+/* src/pages/UserManagementPage.css */
+.user-management-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.user-management-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: #fff;
+}
+.user-management-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px;
+}
+.user-management-main {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #f8f9fa; /* 배경색 추가 */
+}
+
+/* 검색 및 필터 영역 */
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.filters input[type="text"],
+.filters select {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9em;
+}
+.filters input[type="text"] {
+  flex-grow: 1; /* 검색창이 남은 공간 차지 */
+}
+.filters select {
+  min-width: 100px;
+}
+
+/* 사용자 테이블 */
+.user-table-wrapper {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden; /* 테이블 모서리 둥글게 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow-x: auto; /* 내용 길면 가로 스크롤 */
+}
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* 테이블 최소 너비 (가로 스크롤 대비) */
+}
+.user-table th, .user-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap; /* 줄바꿈 방지 */
+}
+.user-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+}
+.user-table td {
+  font-size: 0.9em;
+}
+.user-table tbody tr:last-child td {
+  border-bottom: none;
+}
+/* 상태별 텍스트 색상 */
+.status-active { color: #2e7d32; }
+.status-banned { color: #c62828; }
+
+.user-actions button {
+  padding: 5px 8px;
+  margin-right: 5px;
+  font-size: 0.8em;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease;
+}
+.view-button { border-color: #ccc; background-color: #fff; }
+.view-button:hover { background-color: #eee; }
+.edit-button { border-color: #1e88e5; background-color: #e3f2fd; color: #1e88e5; }
+.edit-button:hover { background-color: #bbdefb; }
+.ban-button { border-color: #c62828; background-color: #ffebee; color: #c62828; }
+.ban-button:hover { background-color: #ffcdd2; }
+.unban-button { border-color: #2e7d32; background-color: #e8f5e9; color: #2e7d32; }
+.unban-button:hover { background-color: #c8e6c9; }
