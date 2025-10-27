@@ -1,0 +1,195 @@
+/* src/pages/KioskPage.css */
+
+/* --- 공통 키오스크 스타일 --- */
+.kiosk-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* 전체 화면 높이 */
+  width: 100%;
+  background-color: #f0f2f5; /* 밝은 회색 배경 */
+  color: #333; /* 기본 텍스트 색상 */
+  font-family: 'Arial', sans-serif; /* 기본 폰트 */
+}
+
+.kiosk-header {
+  padding: 30px;
+  background-color: var(--primary-color); /* 앱 기본 색상 */
+  color: white;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.kiosk-header h1 {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin: 0;
+}
+
+.kiosk-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 기본 세로 중앙 정렬 */
+  align-items: center;
+  gap: 30px;
+  padding: 40px;
+  text-align: center;
+}
+
+.kiosk-footer {
+  padding: 20px;
+  text-align: center;
+  color: var(--sub-text-color);
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+/* --- 홈 페이지 스타일 (`.kiosk-page.home`) --- */
+.kiosk-main.home-main {
+  justify-content: center; /* 홈 메인은 중앙 정렬 */
+}
+
+.kiosk-button {
+  width: 80%;
+  max-width: 400px;
+  padding: 40px;
+  font-size: 2em;
+  font-weight: bold;
+  background-color: #fff;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+.kiosk-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateY(-2px); /* 살짝 올라가는 효과 */
+}
+.kiosk-icon {
+  font-size: 2.5em;
+}
+.kiosk-subtext {
+  font-size: 0.6em;
+  font-weight: normal;
+  color: #666;
+}
+.kiosk-button:hover .kiosk-subtext {
+  color: #f0f0f0;
+}
+
+/* --- 스캔 페이지 스타일 (`.kiosk-page.scan`) --- */
+.kiosk-main.scan-main {
+  justify-content: center; /* 스캔 영역 중앙 정렬 */
+}
+.kiosk-scan-area,
+.kiosk-process-area,
+.kiosk-photo-area,
+.kiosk-complete-area {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.kiosk-scan-area h3,
+.kiosk-photo-area h3,
+.kiosk-complete-area h3 {
+  font-size: 1.6em;
+  line-height: 1.4;
+  color: #555;
+}
+.kiosk-process-area h3 {
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.qr-scanner-placeholder,
+.camera-placeholder {
+  width: 100%;
+  max-width: 350px;
+  aspect-ratio: 1 / 1; /* 정사각형 */
+  background-color: #333;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.kiosk-input {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.kiosk-message.error {
+  color: #e53e3e;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* 스캔 페이지 확인 버튼 */
+.kiosk-button.confirm-button {
+  width: 100%;
+  max-width: 300px;
+  padding: 18px;
+  font-size: 1.3em;
+  margin-top: 10px;
+}
+.kiosk-button.confirm-button:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* 처음으로 돌아가기 버튼 */
+.kiosk-button-secondary {
+  padding: 12px 25px;
+  font-size: 1.1em;
+  background-color: #777;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.kiosk-button-secondary:hover {
+    background-color: #555;
+}
+
+/* 완료 아이콘 */
+.complete-icon {
+    font-size: 4em;
+    color: #28a745; /* 녹색 */
+}
+
+/* 스피너 (로딩) */
+.spinner {
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid var(--primary-color); /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

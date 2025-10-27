@@ -15,6 +15,16 @@ function ChatFeaturesModal({ onClose, onFeatureSelect, sellerHasTimetable }) {
           <div className="feature-icon">🗓️</div>
           <span>거래일정 추천</span>
         </button>
+
+        {/* --- 비대면 결제 버튼 (신규) --- */}
+        <button
+          className="feature-button"
+          onClick={() => onFeatureSelect('payment')} // 'payment' 기능 선택
+        >
+          <div className="feature-icon">💳</div>
+          <span>비대면 결제</span>
+        </button>
+
         <button className="feature-button" onClick={() => alert('앨범 기능 준비 중')}>
           <div className="feature-icon">🖼️</div>
           <span>앨범</span>

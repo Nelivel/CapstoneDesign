@@ -32,7 +32,8 @@ function LoginPage() {
   return (
     <div className="login-page">
       <button onClick={() => navigate('/')} className="back-button">{'<'}</button>
-      <h1 className="login-logo">DeskClean</h1> {/* 로고 텍스트 변경 */}
+      <img src="/logo.png" alt="책상정리 로고" className="logo" />
+      
       <div className="login-form">
         <input
           type="email" // type 변경

@@ -1,0 +1,99 @@
+/* src/components/ProductTradeHeader.css */
+.trade-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: #fff;
+  flex-shrink: 0; /* 내용 많아져도 줄어들지 않음 */
+  position: relative; /* 상태 옵션의 기준점 */
+}
+.trade-product-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  margin-right: 10px;
+  object-fit: cover;
+}
+.trade-product-info {
+  flex-grow: 1;
+  overflow: hidden; /* 제목 길어질 경우 대비 */
+}
+.status-and-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.trade-product-status {
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0; /* 상태 텍스트 줄어들지 않도록 */
+}
+.trade-product-status.read-only {
+    cursor: default; /* 구매자 뷰에서는 클릭 불가 커서 */
+}
+.trade-product-status.selling { background-color: #eee; }
+.trade-product-status.reserved { background-color: #ffc; border: 1px solid #e6db55; }
+.trade-product-status.sold { background-color: #ddd; color: #777; }
+
+.trade-product-title {
+  font-size: 0.9em;
+  color: var(--text-color); /* 더 잘보이게 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trade-product-price {
+  font-size: 1em;
+  font-weight: bold;
+}
+/* 이전 가격 표시 스타일 (선택 사항) */
+/*
+.original-price {
+  font-size: 0.8em;
+  color: var(--sub-text-color);
+  text-decoration: line-through;
+  margin-left: 5px;
+}
+*/
+.price-adjust-button {
+  padding: 8px 10px;
+  font-size: 0.8em;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 10px; /* 정보 영역과의 간격 */
+  flex-shrink: 0;
+}
+.status-options {
+  position: absolute;
+  top: 45px; /* 상태 텍스트 아래에 표시 */
+  left: 65px; /* 이미지 너비 + 여백 + 상태 텍스트 위치 고려 */
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+.status-options button {
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.status-options button:hover {
+  background-color: #f0f0f0;
+}
+.status-options button:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+}

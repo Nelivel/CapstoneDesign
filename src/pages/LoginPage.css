@@ -8,17 +8,19 @@
   padding: 20px;
 }
 
+/*
 .login-logo {
   text-align: center;
   margin-bottom: 50px;
-  font-size: 2.5em; /* 메인 로고 폰트 크기 */
+  font-size: 2.5em; /* 메인 로고 폰트 크기 
   font-weight: bold;
-  color: var(--primary-color); /* 메인 색상 적용 */
-}
+  color: var(--primary-color);  메인 색상 적용
+}*/
 
 .login-form {
+  margin-top: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; 
   gap: 15px; /* 입력 필드 사이 간격 */
 }
 
