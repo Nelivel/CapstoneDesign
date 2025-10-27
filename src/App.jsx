@@ -62,7 +62,20 @@ function App() {
             {/* --- 라우트 설정은 동일 --- */}
             <Route path="/" element={<AnimatedPage><HomePage /></AnimatedPage>} />
             <Route path="/login" element={<AnimatedPage><LoginPage /></AnimatedPage>} />
-            {/* ... 나머지 라우트 ... */}
+            <Route path="/signup" element={<AnimatedPage><SignUpPage /></AnimatedPage>} />
+            <Route path="/product/:id" element={<AnimatedPage><ProductDetailPage /></AnimatedPage>} />
+            <Route path="/post" element={<AnimatedPage><ProductPostPage /></AnimatedPage>} />
+            <Route path="/favorites" element={<AnimatedPage><FavoriteProductsPage /></AnimatedPage>} />
+            <Route path="/mypage" element={<AnimatedPage><MyPage /></AnimatedPage>} />
+            <Route path="/timetable" element={<AnimatedPage><TimetableDisplayPage /></AnimatedPage>} />
+            <Route path="/timetable/manage" element={<AnimatedPage><TimetableManagePage /></AnimatedPage>} />
+            <Route path="/chat" element={<AnimatedPage><ChatListPage /></AnimatedPage>} />
+            <Route path="/chat/:id" element={<AnimatedPage><ChatRoomPage /></AnimatedPage>} />
+            <Route path="/history/sell" element={<AnimatedPage><SellHistoryPage /></AnimatedPage>} />
+            <Route path="/history/buy" element={<AnimatedPage><BuyHistoryPage /></AnimatedPage>} />
+            <Route path="/reputation" element={<AnimatedPage><ReputationPage /></AnimatedPage>} />
+            <Route path="/settings/account" element={<AnimatedPage><AccountSettingsPage /></AnimatedPage>} />
+            
             <Route path="/kiosk" element={<KioskHomePage />} />
             <Route path="/kiosk/scan/:mode" element={<KioskScanPage />} />
           </Routes>
