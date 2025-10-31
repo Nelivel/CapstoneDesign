@@ -2,25 +2,20 @@
 import axios from 'axios';
 
 // 백엔드 서버 주소 (로컬에서 실행 시 보통 8080 포트)
-// 나중에 실제 서버에 배포하면 주소를 바꿔야 해.
-const API_BASE_URL = 'http://localhost:8080'; // <-- 백엔드 서버 주소 확인 필요!
+const API_BASE_URL = 'http://localhost:8080';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // 세션 쿠키를 사용하기 위해 withCredentials 활성화
+  withCredentials: true,
 });
 
-// 요청 인터셉터: 모든 요청 헤더에 JWT 토큰 추가
+// 요청 인터셉터: 세션 기반 인증을 사용하므로 토큰 추가 불필요
 api.interceptors.request.use(
   (config) => {
-    // localStorage에서 토큰 가져오기
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // 헤더에 Bearer 토큰 추가
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -28,7 +23,19 @@ api.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터 (옵션): 토큰 만료 시 리프레시 토큰으로 재발급 로직 추가 가능
-// api.interceptors.response.use(...)
+// 응답 인터셉터: 인증 실패 시 로그인 페이지로 리다이렉트
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // 세션 만료나 인증 실패 시 로그인 페이지로 이동
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      // 로그인 페이지로 리다이렉트 (필요시 구현)
+      // window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

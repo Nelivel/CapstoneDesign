@@ -7,16 +7,14 @@ import './LoginPage.css'; // back-button 재사용
 
 function SignUpPage() {
   const { navigate } = useNavigation();
-  // const [profileName, setProfileName] = useState(''); // 백엔드 User 엔티티 확인 후 필드 조정 필요
-  const [email, setEmail] = useState(''); // 백엔드 username 필드와 매칭
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  // const [authCode, setAuthCode] = useState(''); // 이메일 인증 로직 추가 시 필요
-  // const [isEmailSent, setIsEmailSent] = useState(false); // 이메일 인증 로직 추가 시 필요
   const [error, setError] = useState('');
 
-  // 회원가입 버튼 활성화 조건 (백엔드 필드에 맞게 수정)
-  const isSignUpButtonDisabled = !email || !password || password !== confirmPassword;
+  // 회원가입 버튼 활성화 조건
+  const isSignUpButtonDisabled = !email || !nickname || !password || password !== confirmPassword;
 
   // 이메일 인증 보내기 핸들러 (백엔드 구현 시 활성화)
   // const handleSendEmail = () => { ... };
@@ -28,13 +26,12 @@ function SignUpPage() {
       return;
     }
     try {
-      // TODO: 백엔드 User 엔티티에 맞춰 필요한 필드 추가 (major, grade, school_number, gender 등)
-      // signup API 호출 (현재는 email(username)과 password만 전달)
-      await signup(email, password /*, 다른 필드들 */);
+      // signup API 호출
+      await signup(email, password, nickname);
       alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
+      setError(err.message || '회원가입 중 오류가 발생했습니다.');
       console.error(err);
     }
   };
@@ -45,20 +42,14 @@ function SignUpPage() {
       <h2 className="signup-header">회원가입</h2>
       {/* <p className="signup-description">학교 웹메일을 통해 인증 후 가입해주세요.</p> */}
       <div className="signup-form">
-        {/* TODO: 백엔드 User 엔티티 필드에 맞춰 입력 필드 추가/수정 */}
-        {/* 예: 프로필 이름(닉네임), 전공, 학년, 학번, 성별 등 */}
-        {/*
         <div className="signup-input-group">
-          <label htmlFor="profileName">프로필 이름</label>
-          <input id="profileName" type="text" placeholder="사용할 프로필 이름" className="signup-input" value={profileName} onChange={(e) => setProfileName(e.target.value)} />
+          <label htmlFor="nickname">닉네임</label>
+          <input id="nickname" type="text" placeholder="사용할 닉네임" className="signup-input" value={nickname} onChange={(e) => setNickname(e.target.value)} />
         </div>
-        */}
         <div className="signup-input-group">
-          <label htmlFor="email">아이디 (학교 이메일)</label> {/* 라벨 변경 */}
+          <label htmlFor="email">아이디</label>
           <div className="signup-email-input-wrapper">
-            <input id="email" type="email" placeholder="예: user@shinhan.ac.kr" className="signup-input" value={email} onChange={(e) => setEmail(e.target.value)} />
-            {/* 이메일 인증 버튼 (백엔드 구현 시 활성화) */}
-            {/* <button onClick={handleSendEmail} ...>인증 메일 전송</button> */}
+            <input id="email" type="text" placeholder="아이디를 입력하세요" className="signup-input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
         </div>
         {/* 이메일 인증 코드 입력 (백엔드 구현 시 활성화) */}

@@ -13,18 +13,21 @@ function LoginPage() {
   const handleLogin = async () => {
     setError(''); // 이전 에러 메시지 초기화
     try {
-      // login API 호출
-      const { accessToken, refreshToken } = await login(username, password);
-
-      // 토큰을 localStorage에 저장 (보안상 더 안전한 방법 고려 필요)
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      // login API 호출 - 세션 기반 인증 사용
+      const response = await login(username, password);
+      
+      // 사용자 정보를 localStorage에 저장
+      if (response.username) {
+        localStorage.setItem('username', response.username);
+        localStorage.setItem('nickname', response.nickname);
+        localStorage.setItem('userId', response.userId);
+      }
 
       // 로그인 성공 시 홈으로 이동
       navigate('/');
     } catch (err) {
       // 로그인 실패 시 에러 메시지 표시
-      setError('로그인 실패. 아이디 또는 비밀번호를 확인하세요.');
+      setError(err.message || '로그인 실패. 아이디 또는 비밀번호를 확인하세요.');
       console.error(err);
     }
   };
