@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 채팅 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .chat-box { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin: 10px 0; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 5px; }
+        .enter { background-color: #e3f2fd; }
+        .talk { background-color: #f5f5f5; }
+        .input-group { display: flex; gap: 10px; margin: 10px 0; }
+        input[type="text"] { flex: 1; padding: 8px; }
+        button { padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>실시간 채팅 테스트</h1>
+        
+        <div id="status" class="status disconnected">연결되지 않음</div>
+        
+        <div class="input-group">
+            <input type="text" id="username" placeholder="사용자명" value="tester">
+            <button onclick="connect()">연결</button>
+            <button onclick="disconnect()">연결 해제</button>
+        </div>
+        
+        <div id="chatBox" class="chat-box"></div>
+        
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="메시지를 입력하세요" onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        function connect() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('사용자명을 입력하세요');
+                return;
+            }
+
+            socket = new WebSocket('ws://localhost:8080/ws-stomp');
+            
+            socket.onopen = function() {
+                console.log('WebSocket 연결됨');
+                updateStatus('연결됨', true);
+                
+                // STOMP CONNECT 프레임 전송
+                socket.send('CONNECT\naccept-version:1.1,1.0\nheart-beat:10000,10000\n\n\x00');
+                
+                // SUBSCRIBE 프레임 전송
+                socket.send('SUBSCRIBE\nid:sub-1\ndestination:/sub/chat/room/room1\n\n\x00');
+                
+                // 입장 메시지 전송
+                socket.send(`SEND\ndestination:/pub/chat/message\ncontent-type:application/json\n\n{"type":"ENTER", "roomId":"room1", "sender":"${username}", "message":""}\x00`);
+                
+                isConnected = true;
+            };
+            
+            socket.onmessage = function(event) {
+                console.log('서버 응답:', event.data);
+                addMessage('서버 응답: ' + event.data);
+            };
+            
+            socket.onclose = function(event) {
+                console.log('WebSocket 연결 해제:', event.code, event.reason);
+                updateStatus('연결 해제됨', false);
+                isConnected = false;
+            };
+            
+            socket.onerror = function(error) {
+                console.log('WebSocket 에러:', error);
+                updateStatus('연결 에러', false);
+                isConnected = false;
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+                isConnected = false;
+                updateStatus('연결 해제됨', false);
+            }
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            const username = document.getElementById('username').value;
+            
+            if (!message || !isConnected) return;
+            
+            // SEND 프레임 전송
+            socket.send(`SEND\ndestination:/pub/chat/message\ncontent-type:application/json\n\n{"type":"TALK", "roomId":"room1", "sender":"${username}", "message":"${message}"}\x00`);
+            
+            messageInput.value = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function updateStatus(message, connected) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        function addMessage(message) {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.textContent = message;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
