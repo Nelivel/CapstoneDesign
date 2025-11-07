@@ -1,8 +1,8 @@
 // src/api/index.js
 import axios from 'axios';
 
-// 백엔드 서버 주소 (로컬에서 실행 시 보통 8080 포트)
-const API_BASE_URL = 'http://localhost:8080';
+// 백엔드 서버 주소: .env(.local)에서 주입, 없으면 기본값
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

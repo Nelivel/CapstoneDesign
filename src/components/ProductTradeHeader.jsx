@@ -24,7 +24,13 @@ function ProductTradeHeader({ product, currentPrice, onPriceAdjustClick, isSelle
 
   return (
     <div className="trade-header">
-      <img src={product.imageUrl} alt={product.title} className="trade-product-image" />
+      {product.imageUrl ? (
+        <img src={product.imageUrl} alt={product.title} className="trade-product-image" />
+      ) : (
+        <div className="trade-product-image" style={{ backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
+          이미지 없음
+        </div>
+      )}
       <div className="trade-product-info">
         <div className="status-and-title">
           {/* 판매자일 경우에만 상태 변경 가능 */}

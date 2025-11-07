@@ -1,18 +1,28 @@
 // src/components/PaymentModal.jsx
 import React, { useState } from 'react';
+import { startPayment } from '../api/paymentApi';
 import './ScheduleModal.css'; // 스타일 재사용
 
-function PaymentModal({ productName, price, onClose, onPaymentSuccess }) {
+function PaymentModal({ productId, productName, price, onClose, onPaymentSuccess }) {
+  // productId가 없으면 에러 표시
+  if (!productId) {
+    console.error('PaymentModal: productId is required');
+  }
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
 
-  const handlePayment = () => {
-    setIsProcessing(true);
-    // 2초간 결제 시뮬레이션
-    setTimeout(() => {
+  const handlePayment = async () => {
+    try {
+      setError('');
+      setIsProcessing(true);
+      const res = await startPayment({ productId, amount: price });
+      onPaymentSuccess && onPaymentSuccess(res); // { paymentId, sellerCode, buyerCode }
+      onClose();
+    } catch (e) {
+      setError('결제 시작에 실패했습니다. 다시 시도해주세요.');
+    } finally {
       setIsProcessing(false);
-      onPaymentSuccess(); // 성공 콜백 호출
-      onClose(); // 모달 닫기
-    }, 2000);
+    }
   };
 
   return (
@@ -34,6 +44,7 @@ function PaymentModal({ productName, price, onClose, onPaymentSuccess }) {
           <button onClick={handlePayment} className="action-button save-button" disabled={isProcessing}>
             {isProcessing ? '결제 진행 중...' : `${price.toLocaleString('ko-KR')}원 결제하기`}
           </button>
+          {error && <p style={{color:'red', marginTop:10}}>{error}</p>}
         </div>
       </div>
     </div>

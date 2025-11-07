@@ -1,7 +1,29 @@
 // src/pages/TimetableDisplayPage.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
+import { getMyTimetableForAI } from '../api/timetableApi';
 import './TimetableDisplayPage.css';
+
+// 시간표 데이터를 시각화하는 함수
+const timetableToEvents = (timetable) => {
+  const days = ['월', '화', '수', '목', '금'];
+  const events = [];
+  timetable.forEach((dayData, dayIdx) => {
+    dayData.forEach((period, periodIdx) => {
+      if (period === 'o') {
+        events.push({
+          id: `${dayIdx}-${periodIdx}`,
+          name: `${periodIdx + 1}교시`,
+          day: days[dayIdx],
+          startTime: `${9 + periodIdx}:00`,
+          endTime: `${9 + periodIdx + 1}:00`,
+          color: '#a0c4ff'
+        });
+      }
+    });
+  });
+  return events;
+};
 
 const MOCK_EVENTS = [
   { id: 1, name: '컴퓨터 구조론', place: '공학관 203호', day: '월', startTime: '10:00', endTime: '12:00', color: '#a0c4ff' },
@@ -21,6 +43,26 @@ const timeToMinutes = (timeStr) => {
 
 function TimetableDisplayPage() {
   const { navigate } = useNavigation();
+  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getMyTimetableForAI();
+        if (data && data.length === 5) {
+          const converted = timetableToEvents(data);
+          setEvents(converted.length > 0 ? converted : MOCK_EVENTS);
+        }
+      } catch (e) {
+        console.error('시간표 로드 실패:', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const displayEvents = loading ? MOCK_EVENTS : events;
 
   return (
     <div className="timetable-display-page">
@@ -42,7 +84,7 @@ function TimetableDisplayPage() {
                 <td className="time-label-cell">{hour > 12 ? hour - 12 : hour}</td>
                 {days.map(day => (
                   <td key={day} className="event-cell">
-                    {MOCK_EVENTS
+                    {displayEvents
                       .filter(event => event.day === day && parseInt(event.startTime.split(':')[0]) === hour)
                       .map(event => {
                         const startMinutes = timeToMinutes(event.startTime) - hour * 60;

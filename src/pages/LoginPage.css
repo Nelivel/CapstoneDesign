@@ -8,6 +8,16 @@
   padding: 20px;
 }
 
+.login-page .logo {
+  display: block;
+  margin: 0 auto 40px auto; /* 상단 여백과 하단 여백 */
+  width: 300px; /* 로고 크기 */
+  height: 300px;
+  border-radius: 12px;
+  object-fit: cover;
+  background-color: transparent;
+}
+
 /*
 .login-logo {
   text-align: center;

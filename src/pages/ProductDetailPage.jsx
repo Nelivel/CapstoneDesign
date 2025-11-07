@@ -1,24 +1,25 @@
 // src/pages/ProductDetailPage.jsx
 import React, { useState, useEffect } from 'react'; // useState, useEffect 추가
-import { useParams } from 'react-router-dom';
-import { useNavigation } from '../context/NavigationContext';
-// import { useGlobalData } from '../context/GlobalContext'; // 제거
+import { useParams, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import { getProductById } from '../api/productApi'; // API 함수 임포트
+import { checkFavoriteStatus, addFavorite, removeFavorite } from '../api/favoriteApi'; // 관심상품 API
+import { getMe } from '../api/authApi'; // 현재 사용자 정보
 import { formatTimeAgo } from '../utils/timeUtils';
 import { MOCK_USERS } from '../data/users'; // 아직 Seller 정보는 mock 사용
 import './ProductDetailPage.css';
 import '../components/ProductCard.css';
 
 function ProductDetailPage() {
-  const { productId } = useParams();
-  const { navigate } = useNavigation();
-  // const { favorites, toggleFavorite } = useGlobalData(); // GlobalContext에서 관심 목록만 가져오도록 수정 필요
+  const { id } = useParams(); // 라우트 파라미터 이름이 'id'인지 확인
+  const productId = id; // useParams에서 받은 id를 productId로 사용
+  const navigate = useNavigate(); // react-router의 useNavigate 직접 사용
 
   const [product, setProduct] = useState(null); // 상품 상태
   const [seller, setSeller] = useState(null);   // 판매자 상태 (임시)
+  const [currentUser, setCurrentUser] = useState(null); // 현재 로그인한 사용자
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFavorite, setIsFavorite] = useState(false); // TODO: 관심 목록 API 연동 필요
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // productId가 변경될 때마다 상품 정보 불러오기
   useEffect(() => {
@@ -26,9 +27,30 @@ function ProductDetailPage() {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('ProductDetailPage - productId from useParams:', productId);
+        console.log('ProductDetailPage - productId type:', typeof productId);
+        
+        if (!productId || productId === 'undefined' || productId === 'null') {
+          console.error('Invalid productId:', productId);
+          setError('상품 ID가 올바르지 않습니다.');
+          setProduct(null);
+          setLoading(false);
+          return;
+        }
+        
         const backendProduct = await getProductById(productId);
+        console.log('Product data received:', backendProduct);
+        
+        if (!backendProduct) {
+          setError('상품 정보를 찾을 수 없습니다.');
+          setProduct(null);
+          return;
+        }
+        
         // 백엔드 응답 -> 프론트엔드 형태로 변환 (HomePage와 동일한 함수 사용 또는 별도 정의)
         const frontendProduct = mapBackendProductToFrontend(backendProduct);
+        console.log('Mapped product:', frontendProduct);
         setProduct(frontendProduct);
 
         // TODO: 백엔드 ProductResponse에 판매자 정보(User)가 포함되어 있다면 아래 로직 수정
@@ -39,36 +61,68 @@ function ProductDetailPage() {
           setSeller(null); // 판매자 정보 없을 경우
         }
 
+        // 관심상품 상태 확인 (에러는 조용히 처리)
+        try {
+          const favoriteStatus = await checkFavoriteStatus(frontendProduct.id);
+          setIsFavorite(favoriteStatus);
+        } catch (favErr) {
+          // 500 에러 등은 checkFavoriteStatus에서 false 반환하므로 여기서는 조용히 처리
+          setIsFavorite(false);
+        }
+
       } catch (err) {
-        setError('상품 정보를 불러오는 데 실패했습니다.');
-        console.error(err);
+        console.error('Product fetch error:', err);
+        setError(err.response?.data?.message || err.message || '상품 정보를 불러오는 데 실패했습니다.');
         setProduct(null); // 에러 발생 시 상품 정보 초기화
       } finally {
         setLoading(false);
       }
     };
 
-    if (productId) {
-      fetchProduct();
-    }
+    fetchProduct();
+
+    // 현재 사용자 정보 로드
+    (async () => {
+      try {
+        const me = await getMe();
+        setCurrentUser(me);
+      } catch (err) {
+        console.error('사용자 정보 로드 실패:', err);
+      }
+    })();
   }, [productId]); // productId가 바뀔 때마다 실행
 
+  // 이미지 URL 생성 함수
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl || imageUrl.trim() === '') {
+      return null; // 빈 문자열 대신 null 반환 (React에서 src에 null을 전달하면 렌더링되지 않음)
+    }
+    // 이미 전체 URL인 경우
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    // 상대 경로인 경우
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090';
+    return `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   // --- 백엔드 응답 -> 프론트엔드 데이터 구조 변환 함수 ---
-  // HomePage의 함수와 동일하게 사용하거나 필요시 수정
-  const mapBackendProductToFrontend = (backendProduct) => { /* ... HomePage의 함수 내용과 동일 ... */
+  const mapBackendProductToFrontend = (backendProduct) => {
+    const sellerNickname = backendProduct.seller?.nickname || backendProduct.seller?.username || 'Unknown Seller';
     return {
       id: backendProduct.id,
-      sellerNickname: backendProduct.nickname || 'Unknown Seller', // 임시: 백엔드 Product 엔티티 수정 필요
-      sellerHasTimetable: true, // 임시
-      imageUrl: "https://via.placeholder.com/150", // 임시
-      title: backendProduct.productName,
-      nickname: backendProduct.nickname || 'Unknown Seller', // 임시
-      description: backendProduct.productDescription,
-      price: backendProduct.productPrice,
+      sellerId: backendProduct.seller?.id || null, // 판매자 ID 저장
+      sellerNickname: sellerNickname,
+      sellerHasTimetable: true, // TODO: 백엔드 User 정보에서 시간표 유무 확인
+      imageUrl: getImageUrl(backendProduct.imageUrl),
+      title: backendProduct.productName || '제목 없음',
+      nickname: sellerNickname,
+      description: backendProduct.productDescription || '',
+      price: backendProduct.productPrice ? Number(backendProduct.productPrice) : 0,
       status: mapBackendStatusToFrontend(backendProduct.status),
       category: mapBackendCategoryToFrontend(backendProduct.category),
-      createdAt: backendProduct.createdAt,
-      viewCount: backendProduct.viewCount,
+      createdAt: backendProduct.createdAt || new Date().toISOString(),
+      viewCount: backendProduct.viewCount || 0,
     };
   };
   const mapBackendStatusToFrontend = (backendStatus) => { /* ... HomePage 함수와 동일 ... */
@@ -90,22 +144,68 @@ function ProductDetailPage() {
   };
 
 
-  // 관심 버튼 핸들러 (API 연동 필요)
-  const handleFavoriteClick = (e) => {
+  // 관심 버튼 핸들러
+  const handleFavoriteClick = async (e) => {
     e.stopPropagation();
-    // toggleFavorite(product.id); // GlobalContext 대신 API 호출 로직 필요
-    setIsFavorite(!isFavorite); // 임시 토글
-    // TODO: 관심 상품 추가/삭제 API 호출
-    alert('관심 상품 기능 API 연동 필요');
+    if (!product) return;
+
+    try {
+      if (isFavorite) {
+        console.log('Removing favorite for product:', product.id);
+        await removeFavorite(product.id);
+        setIsFavorite(false);
+        console.log('Favorite removed successfully');
+      } else {
+        console.log('Adding favorite for product:', product.id);
+        await addFavorite(product.id);
+        setIsFavorite(true);
+        console.log('Favorite added successfully');
+      }
+    } catch (err) {
+      console.error('관심상품 토글 실패:', err);
+      if (err.response?.status === 401 || err.sessionExpired) {
+        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+        navigate('/login');
+      } else {
+        alert('관심상품 등록/해제에 실패했습니다: ' + (err.response?.data?.error || err.message));
+      }
+    }
   };
 
-  const getChatRoomId = (nickname) => { /* ... 기존 함수 ... */
-    if (nickname === '스터디홀릭') return 1;
-    if (nickname === '경영새내기') return 2;
-    if (nickname === '시간표_미제공자') return 3;
-    if (nickname === '글로벌리') return 1;
-    if (nickname === '긱스가든') return 2;
-    return 1;
+  // 채팅하기 핸들러
+  const handleChatClick = async () => {
+    if (!product || !currentUser) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    // 본인이 올린 상품인지 확인
+    const isMyProduct = currentUser && product.sellerId && (Number(currentUser.id) === Number(product.sellerId));
+    if (isMyProduct) {
+      alert('자신이 올린 상품에는 채팅을 보낼 수 없습니다.');
+      return;
+    }
+
+    try {
+      // 상품 정보에서 판매자 ID 가져오기
+      const sellerId = product.sellerId || 0; // backendProduct.seller?.id
+      
+      // 채팅방 ID 생성 (productId 기반)
+      const chatRoomId = product.id; // 간단하게 productId를 채팅방 ID로 사용
+      
+      // 채팅방으로 이동 (productId를 state로 전달)
+      navigate(`/chat/${chatRoomId}`, {
+        state: {
+          productId: product.id,
+          sellerId: sellerId,
+          sellerNickname: product.sellerNickname
+        }
+      });
+    } catch (err) {
+      console.error('채팅방 이동 실패:', err);
+      alert('채팅방으로 이동하는데 실패했습니다.');
+    }
   };
 
   const getMannerFace = (credits) => { /* ... 기존 함수 ... */
@@ -117,9 +217,42 @@ function ProductDetailPage() {
   };
 
   // 로딩 중 또는 에러 발생 시 처리
-  if (loading) return <div>로딩 중...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
-  if (!product) return <div>상품 정보를 찾을 수 없습니다.</div>;
+  if (loading) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div>로딩 중...</div>
+        <div style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
+          상품 ID: {productId || '없음'}
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>
+        <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '10px' }}>
+          상품 ID: {productId || '없음'}
+        </div>
+        <button onClick={() => navigate('/')} style={{ padding: '10px 20px', marginTop: '10px' }}>
+          홈으로 돌아가기
+        </button>
+      </div>
+    );
+  }
+  if (!product) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div>상품 정보를 찾을 수 없습니다.</div>
+        <div style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
+          상품 ID: {productId || '없음'}
+        </div>
+        <button onClick={() => navigate('/')} style={{ padding: '10px 20px', marginTop: '10px' }}>
+          홈으로 돌아가기
+        </button>
+      </div>
+    );
+  }
 
   // --- 정상 렌더링 ---
   return (
@@ -147,7 +280,20 @@ function ProductDetailPage() {
 
         {/* 상품 이미지 */}
         <div className="detail-image-container">
-            <img src={product.imageUrl} alt={product.title} className="detail-image" />
+            {product.imageUrl ? (
+              <img 
+                src={product.imageUrl} 
+                alt={product.title} 
+                className="detail-image"
+                onError={(e) => {
+                  e.target.style.display = 'none'; // 이미지 로드 실패 시 숨김
+                }}
+              />
+            ) : (
+              <div className="detail-image" style={{ backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', minHeight: '300px' }}>
+                이미지 없음
+              </div>
+            )}
         </div>
 
         {/* 상품 정보 (product 상태 사용) */}
@@ -181,13 +327,14 @@ function ProductDetailPage() {
 
         <button
           className="chat-button"
-          onClick={() => navigate(
-            `/chat/${getChatRoomId(product.sellerNickname)}`,
-            { state: { productId: product.id } }
-          )}
-          disabled={product.status === 'sold'}
+          onClick={handleChatClick}
+          disabled={product.status === 'sold' || (currentUser && product.sellerId && Number(currentUser.id) === Number(product.sellerId))}
         >
-          {product.status === 'sold' ? '거래 완료' : '채팅하기'}
+          {product.status === 'sold' 
+            ? '거래 완료' 
+            : (currentUser && product.sellerId && Number(currentUser.id) === Number(product.sellerId))
+            ? '내 상품'
+            : '채팅하기'}
         </button>
       </footer>
     </div>

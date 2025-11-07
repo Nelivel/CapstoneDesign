@@ -39,3 +39,49 @@
   padding: 15px;
   background-color: #f8f9fa;
 }
+
+.timetable-cell {
+  height: 40px;
+  min-height: 40px;
+  padding: 4px;
+  transition: background-color 0.2s;
+}
+
+.timetable-cell.free {
+  background-color: #fff;
+}
+
+.timetable-cell.free:hover {
+  background-color: #e8f5e9;
+}
+
+.timetable-cell.occupied {
+  background-color: #a0c4ff;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.timetable-cell.occupied:hover {
+  background-color: #7fb3ff;
+}
+
+.save-button {
+  padding: 8px 20px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.save-button:hover {
+  background-color: #ff5252;
+}
+
+.save-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

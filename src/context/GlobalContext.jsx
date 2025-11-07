@@ -1,12 +1,11 @@
 // src/context/GlobalContext.jsx
 import React, { createContext, useContext, useReducer } from 'react';
 import { INITIAL_PRODUCTS } from '../data/products';
-import { MOCK_USERS } from '../data/users';
 
 // 1. 초기 상태 정의
 const initialState = {
-  // 현재 로그인한 사용자 (시뮬레이션)
-  user: MOCK_USERS['me'], 
+  // 현재 로그인 사용자 (초기값 null, 실데이터는 API에서)
+  user: null,
   // 전체 상품 목록
   products: INITIAL_PRODUCTS,
   // 관심 상품 ID 목록 (Set으로 관리하면 중복 없고 빠름)

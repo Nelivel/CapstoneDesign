@@ -10,6 +10,7 @@ import { GlobalProvider } from './context/GlobalContext';       // GlobalProvide
 // 컴포넌트 임포트
 import AnimatedPage from './components/AnimatedPage';
 import BottomNavBar from './components/BottomNavBar';
+import RequireAuth from './components/RequireAuth';
 // 페이지 임포트
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -28,6 +29,7 @@ import ReputationPage from './pages/ReputationPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import KioskHomePage from './pages/KioskHomePage';
 import KioskScanPage from './pages/KioskScanPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 function App() {
   const location = useLocation();
@@ -60,21 +62,22 @@ function App() {
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* --- 라우트 설정은 동일 --- */}
-            <Route path="/" element={<AnimatedPage><HomePage /></AnimatedPage>} />
+            <Route path="/" element={<RequireAuth><AnimatedPage><HomePage /></AnimatedPage></RequireAuth>} />
             <Route path="/login" element={<AnimatedPage><LoginPage /></AnimatedPage>} />
             <Route path="/signup" element={<AnimatedPage><SignUpPage /></AnimatedPage>} />
-            <Route path="/product/:id" element={<AnimatedPage><ProductDetailPage /></AnimatedPage>} />
-            <Route path="/post" element={<AnimatedPage><ProductPostPage /></AnimatedPage>} />
-            <Route path="/favorites" element={<AnimatedPage><FavoriteProductsPage /></AnimatedPage>} />
-            <Route path="/mypage" element={<AnimatedPage><MyPage /></AnimatedPage>} />
-            <Route path="/timetable" element={<AnimatedPage><TimetableDisplayPage /></AnimatedPage>} />
-            <Route path="/timetable/manage" element={<AnimatedPage><TimetableManagePage /></AnimatedPage>} />
-            <Route path="/chat" element={<AnimatedPage><ChatListPage /></AnimatedPage>} />
-            <Route path="/chat/:id" element={<AnimatedPage><ChatRoomPage /></AnimatedPage>} />
-            <Route path="/history/sell" element={<AnimatedPage><SellHistoryPage /></AnimatedPage>} />
-            <Route path="/history/buy" element={<AnimatedPage><BuyHistoryPage /></AnimatedPage>} />
-            <Route path="/reputation" element={<AnimatedPage><ReputationPage /></AnimatedPage>} />
-            <Route path="/settings/account" element={<AnimatedPage><AccountSettingsPage /></AnimatedPage>} />
+            <Route path="/verify-email" element={<AnimatedPage><VerifyEmailPage /></AnimatedPage>} />
+            <Route path="/product/:id" element={<RequireAuth><AnimatedPage><ProductDetailPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/post" element={<RequireAuth><AnimatedPage><ProductPostPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/favorites" element={<RequireAuth><AnimatedPage><FavoriteProductsPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/mypage" element={<RequireAuth><AnimatedPage><MyPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/timetable" element={<RequireAuth><AnimatedPage><TimetableDisplayPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/timetable/manage" element={<RequireAuth><AnimatedPage><TimetableManagePage /></AnimatedPage></RequireAuth>} />
+            <Route path="/chat" element={<RequireAuth><AnimatedPage><ChatListPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/chat/:id" element={<RequireAuth><AnimatedPage><ChatRoomPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/history/sell" element={<RequireAuth><AnimatedPage><SellHistoryPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/history/buy" element={<RequireAuth><AnimatedPage><BuyHistoryPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/reputation" element={<RequireAuth><AnimatedPage><ReputationPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/settings/account" element={<RequireAuth><AnimatedPage><AccountSettingsPage /></AnimatedPage></RequireAuth>} />
             
             <Route path="/kiosk" element={<KioskHomePage />} />
             <Route path="/kiosk/scan/:mode" element={<KioskScanPage />} />

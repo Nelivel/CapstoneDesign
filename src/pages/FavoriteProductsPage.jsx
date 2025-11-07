@@ -1,33 +1,56 @@
 // src/pages/FavoriteProductsPage.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import ProductCard from '../components/ProductCard';
-// import { MOCK_PRODUCTS } from '../mock-products'; // 1. 삭제
-import { useGlobalData } from '../context/GlobalContext'; // 2. 임포트
+import { getFavorites } from '../api/favoriteApi';
 import './FavoriteProductsPage.css';
-
-// const MOCK_FAVORITE_PRODUCT_IDS = [1, 3, 5]; // 3. 삭제
 
 function FavoriteProductsPage() {
   const { navigate } = useNavigation();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 4. 컨텍스트에서 상품 목록과 관심 목록 Set 가져오기
-  const { products, favorites } = useGlobalData();
-
-  // 5. 컨텍스트 데이터를 기반으로 관심 상품 필터링
-  const favoriteProducts = products.filter(product =>
-    favorites.has(product.id)
-  );
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getFavorites();
+        if (data && Array.isArray(data)) {
+          const formatted = data.map(p => ({
+            id: p.id,
+            title: p.productName || '제목 없음',
+            description: p.productDescription || '',
+            price: p.productPrice ? Number(p.productPrice) : 0,
+            status: p.status === 'ON_SALE' ? 'selling' : p.status === 'RESERVED' ? 'reserved' : p.status === 'SOLD_OUT' ? 'sold' : 'selling',
+            category: p.category === 'BOOKS' ? '교재' : p.category === 'ELECTRONICS' ? '전자기기' : p.category === 'DAILY_SUPPLIES' ? '생활용품' : p.category === 'FASHION' ? '패션' : '기타',
+            sellerNickname: p.seller?.nickname || p.seller?.username || 'Unknown',
+            nickname: p.seller?.nickname || p.seller?.username || 'Unknown',
+            createdAt: p.createdAt || new Date().toISOString(),
+            imageUrl: p.imageUrl || null,
+          }));
+          setProducts(formatted);
+        } else {
+          setProducts([]);
+        }
+      } catch (e) {
+        console.error('관심상품 로드 실패:', e);
+        setProducts([]); // 에러 시 빈 배열로 설정
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="favorite-products-page">
-      
       <header className="favorite-header">
         <h2 className="favorite-header-title">관심 상품</h2>
       </header>
       <main className="favorite-main">
-        {favoriteProducts.length > 0 ? (
-          favoriteProducts.map(product => (
+        {loading ? (
+          <p>로딩 중...</p>
+        ) : products.length > 0 ? (
+          products.map(product => (
             <ProductCard key={product.id} product={product} />
           ))
         ) : (

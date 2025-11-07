@@ -1,0 +1,107 @@
+/* src/pages/VerifyEmailPage.css */
+.verify-email-page {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.verify-container {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.verify-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.verify-icon.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.verify-icon.success {
+  color: #4caf50;
+}
+
+.verify-icon.error {
+  color: #f44336;
+}
+
+.verify-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: var(--text-color);
+}
+
+.verify-message {
+  font-size: 1em;
+  color: var(--sub-text-color);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.verify-hint {
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  margin-bottom: 20px;
+}
+
+.verify-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.verify-button {
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.verify-button:hover {
+  background-color: #4a38e8;
+}
+
+.verify-button.secondary {
+  background-color: #6c757d;
+}
+
+.verify-button.secondary:hover {
+  background-color: #5a6268;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+

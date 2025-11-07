@@ -2,22 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; // react-router-dom 훅 사용
 import './KioskPage.css'; // 공통 CSS
+import { validateCode, depositConfirm, pickup } from '../api/paymentApi';
+import api from '../api';
 
-// 채팅방에서 생성된 임시 QR 코드 (실제로는 서버 검증 필요)
-// ChatRoomPage.jsx의 handlePaymentSuccess에서 생성한 QR 코드 형식과 맞춰야 함
-// 예시: const MOCK_SELLER_QR = 'SELLER_QR_1_1729999999999';
-// 예시: const MOCK_BUYER_QR = 'BUYER_QR_1_1800000000000';
-// 여기서는 간단하게 고정값 사용
-const MOCK_SELLER_QR = 'SELLER_QR_CODE_12345';
-const MOCK_BUYER_QR = 'BUYER_QR_CODE_67890';
+// 서버에서 발급된 코드 검증/처리로 변경
 
 function KioskScanPage() {
   const { mode } = useParams(); // URL 파라미터 ('deposit' or 'retrieve')
   const navigate = useNavigate();
   const [qrInput, setQrInput] = useState('');
-  const [step, setStep] = useState('scan'); // 단계: scan, processing, photo(판매자), complete
+  const [step, setStep] = useState('scan'); // 단계: scan, processing, photo(판매자), locker(캐비닛 잠금 해제), complete
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [lockerNumber, setLockerNumber] = useState(null); // 캐비닛 번호
 
   const isDeposit = mode === 'deposit'; // 판매자 모드 여부
   const title = isDeposit ? '물품 보관하기' : '물품 찾기';
@@ -27,58 +25,60 @@ function KioskScanPage() {
     setErrorMessage(''); // 이전 에러 메시지 초기화
     setStep('processing'); // 처리 중 상태로 변경
 
-    // --- QR 코드 유효성 검사 (시뮬레이션) ---
-    let isValid = false;
-    if (isDeposit && qrInput === MOCK_SELLER_QR) {
-      isValid = true;
-    } else if (!isDeposit && qrInput === MOCK_BUYER_QR) {
-      isValid = true;
-    }
-
-    // 검증 결과에 따른 분기
-    setTimeout(() => { // 실제 네트워크 요청처럼 보이게 딜레이
-      if (isValid) {
-        setMessage('QR 코드 인증 완료! 보관함 문이 열립니다.');
-        // --- 성공 시 다음 단계 ---
-        setTimeout(() => {
+    (async () => {
+      try {
+        const response = await validateCode({ code: qrInput, role: isDeposit ? 'SELLER' : 'BUYER' });
+        const { paymentId, lockerNumber: lockerNum } = response;
+        
+        // 캐비닛 번호 저장
+        setLockerNumber(lockerNum);
+        
+        // 캐비닛 잠금 해제 화면 표시
+        setStep('locker');
+        setMessage(`QR 코드 인증 완료!\n${lockerNum}번 캐비닛이 잠금 해제되었습니다.`);
+        
+        setTimeout(async () => {
           if (isDeposit) {
-            setStep('photo'); // 판매자는 사진 촬영 단계로
-            setMessage('물품을 넣고 문을 닫은 후, 아래 확인 버튼을 눌러주세요.');
+            setStep('photo');
+            setMessage(`물품을 ${lockerNum}번 캐비닛에 넣고 문을 닫은 후, 아래 확인 버튼을 눌러주세요.`);
+            // 확인 버튼에서 depositConfirm 호출
+            (window).__paymentId = paymentId;
           } else {
-            setStep('complete'); // 구매자는 완료 단계로
-            setMessage('물품을 수령했습니다!\n3초 후 자동으로 홈 화면으로 돌아갑니다.');
-            // [시나리오 4-1] 구매자 수령 완료 -> 시스템이 판매자에게 금액 전송 (API 호출 필요)
-            // [시나리오 4-2] 상품 상태 '판매 완료'로 변경 (API 호출 필요)
-            // TODO: API 호출 로직 추가 (예: `markProductAsSold(productId)`)
-            setTimeout(() => navigate('/kiosk'), 3000); // 3초 후 홈으로
+            await pickup(paymentId);
+            setStep('complete');
+            setMessage(`물품을 ${lockerNum}번 캐비닛에서 수령했습니다!\n3초 후 자동으로 홈 화면으로 돌아갑니다.`);
+            setTimeout(() => navigate('/kiosk'), 3000);
           }
-        }, 1500); // 문 열리는 시간 시뮬레이션
-      } else {
-        // --- 실패 시 ---
-        setStep('scan'); // 다시 스캔 단계로
+        }, 2000); // 2초 후 다음 단계로
+      } catch (e) {
+        setStep('scan');
         setErrorMessage('유효하지 않은 QR 코드입니다. 다시 시도해주세요.');
-        setQrInput(''); // 입력 필드 초기화
+        setQrInput('');
       }
-    }, 1000); // 인증 시간 시뮬레이션
+    })();
   };
 
   // [시나리오 3-1] 판매자 사진 촬영 및 보관 완료 처리
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     setStep('processing');
-    setMessage('사진 촬영 및 보관 처리 중... (시뮬레이션)');
-
-    // --- 시뮬레이션: 사진 촬영 및 서버 전송 ---
-    setTimeout(() => {
-      // [시나리오 3-2, 3-3]
-      // 1. 찍은 사진을 구매자 앱/채팅으로 전송 (API 호출 필요)
-      // 2. 구매자에게 '물품 수령 QR' 알림/메시지 전송 (API 호출/WebSocket 필요)
-      //    (ChatRoomPage에서 미리 생성했지만, 원래는 이 시점에 전송)
-      // 3. 상품 상태 '예약 중' 등으로 변경? (선택 사항, API 호출 필요)
-
+    setMessage('사진 촬영 및 보관 처리 중...');
+    try {
+      const paymentId = (window).__paymentId;
+      if (paymentId) {
+        if (photoFile) {
+          const form = new FormData();
+          form.append('file', photoFile);
+          await api.post(`/payments/${paymentId}/locker-photo`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        }
+        await depositConfirm(paymentId);
+      }
       setStep('complete');
       setMessage('물품 보관이 완료되었습니다.\n구매자에게 알림이 전송됩니다.\n3초 후 자동으로 홈 화면으로 돌아갑니다.');
-      setTimeout(() => navigate('/kiosk'), 3000); // 3초 후 홈으로
-    }, 2000); // 처리 시간 시뮬레이션
+      setTimeout(() => navigate('/kiosk'), 3000);
+    } catch (e) {
+      setStep('scan');
+      setErrorMessage('보관 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   // QR 입력 필드 변경 핸들러
@@ -124,12 +124,24 @@ function KioskScanPage() {
           </div>
         )}
 
+        {/* 2-1. 캐비닛 잠금 해제 화면 */}
+        {step === 'locker' && lockerNumber && (
+          <div className="kiosk-locker-area">
+            <div className="locker-unlock-animation">
+              <div className="locker-number-display">{lockerNumber}</div>
+              <div className="locker-status">🔓 잠금 해제됨</div>
+            </div>
+            <h3 style={{ whiteSpace: 'pre-line' }}>{message}</h3>
+          </div>
+        )}
+
         {/* 3. 판매자 사진 촬영 */}
         {step === 'photo' && (
           <div className="kiosk-photo-area">
              <h3>{message}</h3>
              {/* 실제 카메라 연동 시 필요한 UI 요소 */}
             <div className="camera-placeholder">[보관함 내부 카메라 영역]</div>
+            <input type="file" accept="image/*" className="kiosk-input" onChange={(e)=>setPhotoFile(e.target.files?.[0]||null)} />
             <button className="kiosk-button confirm-button" style={{width: '100%'}} onClick={handleTakePhoto}>
               물품 확인 및 사진 촬영 완료
             </button>

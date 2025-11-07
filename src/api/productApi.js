@@ -45,15 +45,16 @@ export const getProductById = async (id) => {
  */
 export const createProduct = async (productData) => {
   try {
-    // 프론트엔드 카테고리/상태 값 -> 백엔드 Enum 값으로 변환 필요
+    // 프론트엔드 카테고리/상태 값 -> 백엔드 Enum 값으로 변환
     const backendData = {
-      ...productData,
-      category: mapFrontendCategoryToBackend(productData.category), // 변환 함수 필요
-      status: mapFrontendStatusToBackend(productData.status),     // 변환 함수 필요
-      location: mapFrontendLocationToBackend(productData.location), // 변환 함수 필요
+      productName: productData.productName || productData.title,
+      productDescription: productData.productDescription || productData.description,
+      productPrice: productData.productPrice || productData.price,
+      category: mapFrontendCategoryToBackend(productData.category || '기타'),
+      status: mapFrontendStatusToBackend(productData.status || 'selling'),
+      location: mapFrontendLocationToBackend(productData.location || 'IN_PERSON'),
     };
     const response = await api.post('/product', backendData);
-    // TODO: 백엔드 응답 데이터 구조 확인 필요 (ProductResponse)
     return response.data;
   } catch (error) {
     console.error('Create Product API error:', error.response?.data || error.message);

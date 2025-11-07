@@ -83,18 +83,98 @@
   opacity: 0.7;
 }
 
-/* 팝업 메시지 스타일 (임시) */
-.popup-message {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 20px 30px;
-  border-radius: 10px;
+/* 회원가입 성공 화면 */
+.signup-success-container {
   text-align: center;
-  z-index: 1000;
+  padding: 40px 20px;
+}
+
+.success-icon {
+  font-size: 4em;
+  color: #4caf50;
+  margin-bottom: 20px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.success-message {
   font-size: 1.1em;
+  color: var(--text-color);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.email-info {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  font-size: 0.95em;
+  color: var(--text-color);
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resend-button {
+  padding: 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.resend-button:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.resend-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.login-button {
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #4a38e8;
+}
+
+/* 입력 힌트 스타일 */
+.input-hint {
+  font-size: 0.85em;
+  color: var(--sub-text-color);
+  margin-top: 5px;
+  text-align: left;
+}
+
+.input-hint.error {
+  color: #f44336;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
   

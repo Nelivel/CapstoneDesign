@@ -1,7 +1,7 @@
 // src/pages/TimetableManagePage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import ScheduleModal from '../components/ScheduleModal';
+import { getMyTimetableForAI, saveTimetable } from '../api/timetableApi';
 import './TimetableDisplayPage.css'; // 보기 페이지의 CSS를 재사용합니다!
 import './TimetableManagePage.css'; // 관리 페이지 전용 CSS도 불러옵니다.
 
@@ -12,7 +12,10 @@ const INITIAL_EVENTS = [
 ];
 
 const days = ['월', '화', '수', '목', '금'];
-const hours = Array.from({ length: 8 }, (_, i) => i + 9);
+const hours = Array.from({ length: 9 }, (_, i) => i + 9); // 1교시~9교시
+
+// 시간표 데이터를 5x9 매트릭스 형식으로 변환
+const createEmptyTimetable = () => Array(5).fill(null).map(() => Array(9).fill('x'));
 
 const timeToMinutes = (timeStr) => {
   const [hour, minute] = timeStr.split(':').map(Number);
@@ -22,8 +25,48 @@ const timeToMinutes = (timeStr) => {
 function TimetableManagePage() {
   const { navigate } = useNavigation();
   const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [timetable, setTimetable] = useState(createEmptyTimetable()); // 5x9 매트릭스
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  // 백엔드에서 시간표 로드
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getMyTimetableForAI();
+        if (data && data.length === 5) {
+          setTimetable(data);
+        }
+      } catch (e) {
+        console.error('시간표 로드 실패:', e);
+      }
+    })();
+  }, []);
+
+  // 시간표 저장
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await saveTimetable(timetable);
+      alert('시간표가 저장되었습니다.');
+      navigate('/timetable');
+    } catch (e) {
+      alert('시간표 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 특정 교시 토글 (o <-> x)
+  const togglePeriod = (dayIdx, periodIdx) => {
+    const newTimetable = timetable.map((day, dIdx) => 
+      dIdx === dayIdx 
+        ? day.map((period, pIdx) => pIdx === periodIdx ? (period === 'o' ? 'x' : 'o') : period)
+        : day
+    );
+    setTimetable(newTimetable);
+  };
 
   const handleSaveEvent = (eventData) => {
     if (eventData.id) { // 수정
@@ -54,7 +97,9 @@ function TimetableManagePage() {
           <button onClick={() => navigate('/timetable')} className="back-button" style={{position: 'static'}}>{'<'}</button>
           <h2>시간표 관리</h2>
         </div>
-        <button onClick={openAddModal} className="add-event-button">+ 일정 추가</button>
+        <button onClick={handleSave} className="save-button" disabled={saving}>
+          {saving ? '저장 중...' : '시간표 저장'}
+        </button>
       </header>
       <main className="timetable-manage-main">
         <table className="timetable-table">
@@ -65,37 +110,22 @@ function TimetableManagePage() {
             </tr>
           </thead>
           <tbody>
-            {hours.map(hour => (
+            {hours.map((hour, hourIdx) => (
               <tr key={hour}>
-                <td className="time-label-cell">{hour > 12 ? hour - 12 : hour}</td>
-                {days.map(day => (
-                  <td key={day} className="event-cell">
-                    {events
-                      .filter(event => event.day === day && parseInt(event.startTime.split(':')[0]) === hour)
-                      .map(event => {
-                        const startMinutes = timeToMinutes(event.startTime) - hour * 60;
-                        const durationMinutes = timeToMinutes(event.endTime) - timeToMinutes(event.startTime);
-                        const top = (startMinutes / 60) * 100;
-                        const height = (durationMinutes / 60) * 100;
-
-                        return (
-                          <div
-                            key={event.id}
-                            className="event-block"
-                            style={{
-                              top: `${top}%`,
-                              height: `${height}%`,
-                              backgroundColor: event.color,
-                            }}
-                            onClick={() => openEditModal(event)} // 클릭 시 수정 모달 열기
-                          >
-                            <strong>{event.name}</strong>
-                            <span>{event.place}</span>
-                          </div>
-                        );
-                      })}
-                  </td>
-                ))}
+                <td className="time-label-cell">{hourIdx + 1}교시 ({hour}:00)</td>
+                {days.map((day, dayIdx) => {
+                  const period = timetable[dayIdx]?.[hourIdx] || 'x';
+                  return (
+                    <td 
+                      key={day} 
+                      className={`timetable-cell ${period === 'o' ? 'occupied' : 'free'}`}
+                      onClick={() => togglePeriod(dayIdx, hourIdx)}
+                      style={{cursor: 'pointer'}}
+                    >
+                      {period === 'o' ? '수업' : ''}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

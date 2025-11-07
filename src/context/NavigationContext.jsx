@@ -52,7 +52,7 @@ export const NavigationProvider = ({ children }) => {
   const reactRouterNavigate = useReactRouterNavigate();
   const location = useLocation();
 
-  const navigate = (to) => {
+  const navigate = (to, options = {}) => {
     const fromPath = getBasePath(location.pathname);
     const toPath = getBasePath(to);
 
@@ -72,7 +72,8 @@ export const NavigationProvider = ({ children }) => {
         setDirection('forward'); // 그 외 같은 깊이 이동은 '앞으로'
       }
     }
-    reactRouterNavigate(to);
+    // react-router-dom의 navigate는 두 번째 인자로 옵션 객체를 받을 수 있음
+    reactRouterNavigate(to, options);
   };
 
   return (
