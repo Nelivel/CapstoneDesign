@@ -12,6 +12,127 @@
   flex-shrink: 0;
   background-color: #fff;
 }
+.remote-trade-status {
+  margin: 10px 15px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(79, 140, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(79, 140, 255, 0.08);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.remote-trade-info {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  background: rgba(86, 98, 255, 0.15);
+  color: #3b46c5;
+}
+.phase-text {
+  font-size: 0.9em;
+  color: rgba(16, 23, 77, 0.85);
+  margin: 0;
+}
+.phase-subtext {
+  font-size: 0.8em;
+  color: rgba(16, 23, 77, 0.65);
+  margin: 0;
+}
+.phase-error {
+  color: #b73535;
+}
+.phase-loading {
+  font-size: 0.78em;
+  color: rgba(86, 98, 255, 0.75);
+}
+.remote-trade-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.remote-trade-button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #5460ff, #768dff);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(84, 96, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.remote-trade-button:disabled {
+  background: #d3d8f8;
+  color: rgba(32, 42, 90, 0.55);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.remote-trade-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(84, 96, 255, 0.35);
+}
+.remote-guide-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(79, 140, 255, 0.4);
+  background: #fff;
+  color: rgba(61, 79, 190, 0.95);
+  font-weight: 700;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.remote-guide-button:hover {
+  background: rgba(79, 140, 255, 0.12);
+}
+.chat-connection-status {
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #f0f2ff;
+  color: var(--primary-color);
+  border: 1px solid rgba(65, 88, 255, 0.25);
+}
+.chat-connection-status.status-connected {
+  background-color: rgba(97, 207, 120, 0.15);
+  color: #1a7f36;
+  border-color: rgba(97, 207, 120, 0.35);
+}
+.chat-connection-status.status-connecting {
+  background-color: rgba(255, 193, 59, 0.18);
+  color: #a86b00;
+  border-color: rgba(255, 193, 59, 0.35);
+}
+.chat-connection-status.status-error,
+.chat-connection-status.status-closed {
+  background-color: rgba(255, 99, 99, 0.18);
+  color: #b22121;
+  border-color: rgba(255, 99, 99, 0.38);
+}
+.chat-connection-status.status-idle {
+  background-color: rgba(96, 111, 255, 0.12);
+  color: var(--primary-color);
+}
 .chat-room-partner-name {
   flex-grow: 1;
   text-align: center;
@@ -56,6 +177,278 @@
   color: var(--text-color);
   border-bottom-left-radius: 4px;
 }
+.message-bubble.image-bubble {
+  padding: 8px;
+  background-color: #101828;
+  border-radius: 16px;
+  max-width: 65%;
+}
+.message-bubble.image-bubble.partner {
+  background-color: #1f2937;
+}
+.message-bubble.image-bubble.mine {
+  background-color: #4055ff;
+}
+.chat-image {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 12px;
+  display: block;
+  object-fit: cover;
+}
+.image-caption {
+  margin-top: 6px;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.85);
+}
+.message-bubble.image-bubble.partner .image-caption {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.trade-flow-panel {
+  margin: 12px 12px 0;
+  padding: 14px;
+  border: 1px solid rgba(72, 87, 255, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(71, 89, 255, 0.08), rgba(255, 255, 255, 0.9));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.trade-flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.trade-flow-header h3 {
+  font-size: 1.05em;
+  margin-bottom: 4px;
+}
+.trade-flow-description {
+  font-size: 0.85em;
+  color: rgba(18, 25, 71, 0.75);
+}
+.trade-phase-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: rgba(74, 85, 255, 0.18);
+  color: #2c36b8;
+  border: 1px solid rgba(74, 85, 255, 0.25);
+}
+.trade-phase-badge.phase-seller_qr,
+.trade-phase-badge.phase-seller_deposited,
+.trade-phase-badge.phase-buyer_qr {
+  background-color: rgba(255, 193, 59, 0.2);
+  color: #9a6200;
+  border-color: rgba(255, 193, 59, 0.35);
+}
+.trade-phase-badge.phase-completed {
+  background-color: rgba(97, 207, 120, 0.25);
+  color: #1a7f36;
+  border-color: rgba(97, 207, 120, 0.35);
+}
+.trade-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.flow-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: inset 0 0 0 1px rgba(82, 92, 255, 0.05);
+}
+.flow-card-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: rgba(41, 52, 98, 0.65);
+  text-transform: uppercase;
+}
+.flow-card-value {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #1e2c7b;
+}
+.flow-card-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 4px;
+  align-self: flex-start;
+  font-size: 0.8em;
+  color: #4250ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.flow-card-history {
+  grid-column: 1 / -1;
+}
+.flow-history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.flow-history-list li {
+  background: rgba(247, 248, 255, 0.85);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8em;
+  color: rgba(22, 28, 65, 0.85);
+}
+.flow-history-list li .time {
+  font-weight: 600;
+  margin-right: 6px;
+}
+.flow-history-list li.empty {
+  text-align: center;
+  color: rgba(22, 28, 65, 0.55);
+  background: rgba(246, 247, 255, 0.6);
+}
+.trade-flow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.flow-action-button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background-color: rgba(74, 85, 255, 0.12);
+  color: #2c36b8;
+  font-weight: 600;
+  cursor: pointer;
+}
+.flow-action-button.primary {
+  background: linear-gradient(135deg, #5460ff, #7186ff);
+  color: white;
+  box-shadow: 0 10px 18px rgba(84, 96, 255, 0.28);
+}
+.flow-status-text {
+  font-size: 0.82em;
+  color: rgba(20, 27, 60, 0.7);
+}
+
+.simulator-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 19, 40, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 20px;
+}
+.simulator-card {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 22px 45px rgba(18, 24, 57, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+.simulator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid rgba(209, 213, 255, 0.6);
+}
+.simulator-header h3 {
+  margin: 0;
+  font-size: 1.05em;
+}
+.simulator-close {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: rgba(17, 24, 39, 0.6);
+}
+.simulator-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.simulator-step .step-index {
+  font-size: 0.75em;
+  color: rgba(59, 72, 179, 0.7);
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.simulator-step h4 {
+  margin-bottom: 6px;
+  font-size: 1em;
+}
+.simulator-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px 18px;
+  border-top: 1px solid rgba(209, 213, 255, 0.6);
+}
+.simulator-footer .primary {
+  background: linear-gradient(135deg, #5662ff, #8095ff);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.simulator-footer .secondary {
+  background: none;
+  border: none;
+  color: rgba(55, 65, 81, 0.85);
+  font-weight: 600;
+}
+.simulator-qr-block {
+  background: rgba(238, 240, 255, 0.7);
+  border-radius: 14px;
+  padding: 12px;
+}
+.qr-code-text {
+  margin-top: 8px;
+  font-size: 0.78em;
+  color: rgba(17, 24, 39, 0.6);
+  word-break: break-all;
+  text-align: center;
+}
+.simulator-wallet {
+  background: rgba(241, 244, 255, 0.85);
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.simulator-wallet strong {
+  font-size: 1.05em;
+}
+.wallet-recharge {
+  background: rgba(84, 96, 255, 0.1);
+  border: 1px solid rgba(84, 96, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8em;
+  color: #3f4fff;
+  cursor: pointer;
+}
 .message-meta {
   font-size: 0.75em;
   color: var(--sub-text-color);
@@ -80,6 +473,15 @@
   border-top: 1px solid var(--border-color);
   background-color: #fff;
   flex-shrink: 0;
+}
+.chat-upload-indicator {
+  padding: 6px 14px;
+  font-size: 0.85em;
+  color: var(--primary-color);
+  background-color: rgba(79, 140, 255, 0.12);
+  margin: 0 12px 10px;
+  border-radius: 10px;
+  align-self: flex-end;
 }
 .chat-plus-button {
   background: none;
@@ -167,6 +569,101 @@
   color: var(--text-color);
   border: none;
 }
+.message-bubble.price-proposal {
+  background: linear-gradient(135deg, rgba(86, 98, 255, 0.1), rgba(118, 207, 255, 0.18));
+  border: 1px solid rgba(86, 98, 255, 0.15);
+  padding: 14px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.proposal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.proposal-title {
+  font-weight: 700;
+  font-size: 0.95em;
+  color: rgba(28, 36, 90, 0.85);
+}
+.proposal-status {
+  font-weight: 600;
+  font-size: 0.85em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(86, 98, 255, 0.18);
+  color: #3846b2;
+}
+.proposal-status.proposal-accepted {
+  background: rgba(42, 198, 112, 0.18);
+  color: #1f8f55;
+}
+.proposal-status.proposal-rejected {
+  background: rgba(255, 104, 104, 0.18);
+  color: #b73535;
+}
+.proposal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85em;
+  color: rgba(24, 31, 76, 0.78);
+}
+.proposal-result {
+  font-weight: 600;
+  color: #2b3ccb;
+}
+.proposal-result.rejected {
+  color: #d94545;
+}
+.proposal-timestamp {
+  font-size: 0.78em;
+  color: rgba(24, 31, 76, 0.55);
+}
+.proposal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.proposal-button {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.proposal-button.accept {
+  background: linear-gradient(135deg, #58c766, #86e08f);
+  color: #0f3718;
+  box-shadow: 0 8px 16px rgba(88, 199, 102, 0.25);
+}
+.proposal-button.reject {
+  background: rgba(255, 124, 124, 0.18);
+  color: #a12f2f;
+}
+.proposal-button:disabled {
+  background: rgba(198, 205, 255, 0.4);
+  color: rgba(24, 31, 76, 0.45);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.proposal-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(84, 96, 255, 0.25);
+}
+.proposal-await {
+  font-size: 0.8em;
+  color: rgba(24, 31, 76, 0.6);
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: center;
+}
 
 /* --- 시스템 메시지 (가격 변경, 상태 변경 등) --- */
 .message-row-system {
@@ -214,4 +711,98 @@
   font-size: 0.85em;
   color: var(--sub-text-color);
   text-align: center;
+}
+.guide-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 18, 41, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 20px;
+}
+.guide-card {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 52px rgba(28, 36, 90, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(205, 210, 255, 0.55);
+}
+.guide-step {
+  font-size: 0.82em;
+  color: rgba(28, 36, 90, 0.65);
+  font-weight: 600;
+}
+.guide-close {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: rgba(28, 36, 90, 0.6);
+}
+.guide-body {
+  padding: 18px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.guide-title {
+  margin: 0;
+  font-size: 1.2em;
+  color: rgba(18, 25, 68, 0.92);
+}
+.guide-description {
+  margin: 0;
+  font-size: 0.92em;
+  color: rgba(18, 25, 68, 0.75);
+}
+.guide-points {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.88em;
+  color: rgba(18, 25, 68, 0.8);
+}
+.guide-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid rgba(205, 210, 255, 0.55);
+}
+.guide-button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide-button.primary {
+  background: linear-gradient(135deg, #5460ff, #768dff);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(84, 96, 255, 0.25);
+}
+.guide-button.secondary {
+  background: rgba(84, 96, 255, 0.1);
+  color: #3b46c5;
+}
+.guide-button:disabled {
+  background: rgba(198, 205, 255, 0.4);
+  color: rgba(24, 31, 76, 0.45);
+  cursor: not-allowed;
+  box-shadow: none;
 }

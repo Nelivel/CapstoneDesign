@@ -8,6 +8,8 @@ const NavigationContext = createContext();
 const pageDepths = {
   // Level 0: 하단 탭
   '/': 0,
+  '/welcome': 0,
+  '/home': 0,
   '/chat': 0,
   '/favorites': 0,
   '/mypage': 0,
@@ -24,7 +26,6 @@ const pageDepths = {
   '/timetable': 3,        // '보기' 페이지의 깊이를 3으로 설정 (더 깊게)
 
   // Level 3: 마이페이지 내부 메뉴들
-  '/timetable': 3,
   '/history/sell': 3,
   '/history/buy': 3,
   '/reputation': 3,
@@ -38,12 +39,13 @@ const pageDepths = {
 };
 
 // 하단 탭의 순서
-const navBarOrder = ['/', '/chat', '/favorites', '/mypage'];
+const navBarOrder = ['/home', '/chat', '/favorites', '/mypage'];
 
 // 경로의 기본 형태를 반환하는 함수 (예: '/product/1' -> '/product')
 const getBasePath = (path) => {
   if (path.startsWith('/product/')) return '/product';
   if (path.startsWith('/chat/')) return '/chat/';
+  if (path === '/') return '/welcome';
   return path;
 };
 

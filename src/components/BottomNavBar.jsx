@@ -13,7 +13,7 @@ function BottomNavBar() {
 
   return (
     <nav className="bottom-nav">
-      <button onClick={() => navigate('/')} className={`nav-button ${isActive('/') ? 'active' : ''}`}>
+      <button onClick={() => navigate('/home')} className={`nav-button ${isActive('/home') ? 'active' : ''}`}>
         <span>🏠</span>
         <span>홈</span>
       </button>

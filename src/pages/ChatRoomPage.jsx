@@ -1,20 +1,63 @@
 // src/pages/ChatRoomPage.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useNavigation } from '../context/NavigationContext';
 import { useGlobalData } from '../context/GlobalContext'; // GlobalContext 훅
-import { MOCK_CHAT_ROOMS, MOCK_MESSAGES, MOCK_TRADE_SCHEDULES } from '../data/chats'; // data 경로
 import { getAllMessages, getMessagesByProduct, markMessageAsRead, markAllMessagesAsRead } from '../api/messageApi'; // 백엔드 메시지 API
-import { getProductById } from '../api/productApi'; // 상품 정보 API
+import { getProductById, mapBackendLocationToFrontend } from '../api/productApi'; // 상품 정보 API
 import { getMe } from '../api/authApi'; // 사용자 정보 API
 import { QRCodeSVG } from 'qrcode.react'; // QR 코드 라이브러리
+import {
+  getRemoteTradeSession,
+  sellerStartRemoteTrade,
+  sellerCompleteRemoteTrade,
+  buyerPayRemoteTrade,
+  buyerCompleteRemoteTrade,
+  proposePriceRemoteTrade,
+  respondPriceProposal,
+} from '../api/remoteTradeApi';
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090').replace(/\/$/, '');
+const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || API_BASE_URL.replace(/^http/, 'ws')).replace(/\/$/, '');
+
+const REMOTE_SESSION_POLL_INTERVAL = 5000;
+const DEFAULT_WALLET_BALANCE = 50000;
+
+const getWalletKey = (userId) => (userId ? `virtualWallet_${userId}` : null);
+
+const readWalletBalance = (userId) => {
+  const key = getWalletKey(userId);
+  if (!key) return DEFAULT_WALLET_BALANCE;
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored === null || stored === undefined) return DEFAULT_WALLET_BALANCE;
+    const parsed = Number(stored);
+    if (Number.isNaN(parsed)) return DEFAULT_WALLET_BALANCE;
+    return parsed;
+  } catch (err) {
+    console.warn('Wallet read failure:', err);
+    return DEFAULT_WALLET_BALANCE;
+  }
+};
+
+const writeWalletBalance = (userId, balance) => {
+  const key = getWalletKey(userId);
+  if (!key) return;
+  try {
+    localStorage.setItem(key, String(Math.max(0, Math.round(balance))));
+  } catch (err) {
+    console.warn('Wallet write failure:', err);
+  }
+};
 
 // 컴포넌트 임포트
 import ProductTradeHeader from '../components/ProductTradeHeader';
 import PriceAdjustModal from '../components/PriceAdjustModal';
 import ChatFeaturesModal from '../components/ChatFeaturesModal';
 import TradeScheduleRecommendModal from '../components/TradeScheduleRecommendModal';
-import PaymentModal from '../components/PaymentModal'; // PaymentModal 임포트
+import RemoteGuideStepperModal from '../components/RemoteGuideStepperModal';
+import SellerDepositModal from '../components/SellerDepositModal';
+import BuyerPickupModal from '../components/BuyerPickupModal';
 
 import './ChatRoomPage.css';
 
@@ -28,14 +71,40 @@ function ChatRoomPage() {
   const [currentUser, setCurrentUser] = useState(null); // 현재 사용자 정보 (API에서 직접 로드)
 
   const [messages, setMessages] = useState([]);
+  const [wsStatus, setWsStatus] = useState('idle');
   const [newMessage, setNewMessage] = useState('');
   const messageEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [fileCaptureMode, setFileCaptureMode] = useState('any');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [remoteSession, setRemoteSession] = useState(null);
+  const [remoteSessionLoading, setRemoteSessionLoading] = useState(true);
+  const [remoteSessionError, setRemoteSessionError] = useState(null);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(DEFAULT_WALLET_BALANCE);
+  const remoteSessionPollRef = useRef(null);
+  const markAllReadOnceRef = useRef(false);
+  const [partnerUserId, setPartnerUserId] = useState(null);
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
+  const [sellerModalStep, setSellerModalStep] = useState(0);
+  const [isBuyerModalOpen, setIsBuyerModalOpen] = useState(false);
+  const [buyerModalStep, setBuyerModalStep] = useState(0);
+
+  const applySessionUpdate = useCallback((session) => {
+    setRemoteSession(session);
+    if (session?.currentPrice !== undefined && session?.currentPrice !== null) {
+      const numericPrice = Number(session.currentPrice);
+      if (!Number.isNaN(numericPrice)) {
+        setCurrentPrice(numericPrice);
+      }
+    }
+  }, [setCurrentPrice]);
 
   // 모달 상태
   const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false); // 가격 조정 모달
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // 비대면 결제 모달 상태 추가
 
   // productId는 location.state에서 받거나, chatId를 productId로 사용
   // chatId가 문자열일 수 있으므로 Number 변환 시도
@@ -74,12 +143,82 @@ function ChatRoomPage() {
   const [productLoading, setProductLoading] = useState(true);
   const [productError, setProductError] = useState(null);
 
-  // 채팅방 내에서 관리될 현재 가격 (가격 조정 시 변경됨)
-  const [currentPrice, setCurrentPrice] = useState(0);
+  const currentUserId = currentUser?.id ? Number(currentUser.id) : null;
+  const productSellerId = product?.sellerId ? Number(product.sellerId) : null;
+  const isSellerView = Boolean(currentUserId !== null && productSellerId !== null && currentUserId === productSellerId);
+  const isBuyerView = Boolean(currentUserId !== null && !isSellerView);
+  const isRemoteTrade = product?.tradeType === 'NONE_PERSON';
 
-  // 현재 사용자가 판매자인지 여부
-  const isSellerView = product && currentUser && product.sellerNickname === currentUser?.nickname;
-  
+  const tradePhase = remoteSession?.phase ?? 'IDLE';
+
+  const sellerButtonLabel = (() => {
+    switch (tradePhase) {
+      case 'IDLE':
+        return '물품 등록하기';
+      case 'SELLER_QR':
+        return 'QR코드/보관함 보기';
+      case 'SELLER_DEPOSITED':
+        return '보관함 확인하기';
+      case 'BUYER_QR':
+        return '구매자 결제 대기 중';
+      case 'COMPLETED':
+        return '거래 완료';
+      default:
+        return '거래 진행';
+    }
+  })();
+
+  const sellerButtonDisabled = tradePhase === 'COMPLETED';
+
+  const buyerButtonLabel = (() => {
+    switch (tradePhase) {
+      case 'SELLER_DEPOSITED':
+        return '결제 후 물품 수령';
+      case 'BUYER_QR':
+        return '수령 QR 보기';
+      case 'COMPLETED':
+        return '거래 완료';
+      default:
+        return '거래 대기 중';
+    }
+  })();
+
+  const buyerButtonDisabled = !(tradePhase === 'SELLER_DEPOSITED' || tradePhase === 'BUYER_QR');
+
+  const remotePhaseLabel = (() => {
+    switch (tradePhase) {
+      case 'IDLE':
+        return '대기 중';
+      case 'SELLER_QR':
+        return 'QR 발급';
+      case 'SELLER_DEPOSITED':
+        return '보관 완료';
+      case 'BUYER_QR':
+        return '결제 완료';
+      case 'COMPLETED':
+        return '거래 완료';
+      default:
+        return '진행 중';
+    }
+  })();
+
+  const remotePhaseDescription = (() => {
+    switch (tradePhase) {
+      case 'IDLE':
+        return '판매자가 물품 등록을 시작하면 안내가 표시됩니다.';
+      case 'SELLER_QR':
+        return '키오스크에서 QR을 스캔해 물품을 보관해주세요.';
+      case 'SELLER_DEPOSITED':
+        return '물품 보관이 완료되었습니다. 구매자의 결제를 기다리는 중입니다.';
+      case 'BUYER_QR':
+        return '구매자가 결제를 완료했습니다. 수령 절차를 진행해주세요.';
+      case 'COMPLETED':
+        return '거래가 완료되었습니다.';
+      default:
+        return '거래 정보를 불러오는 중입니다.';
+    }
+  })();
+
   // 현재 사용자 정보 로드
   useEffect(() => {
     (async () => {
@@ -91,6 +230,12 @@ function ChatRoomPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      setWalletBalance(readWalletBalance(currentUser.id));
+    }
+  }, [currentUser?.id]);
 
   // 상품 정보 로드
   useEffect(() => {
@@ -131,7 +276,8 @@ function ChatRoomPage() {
             category: backendProduct.category,
             createdAt: backendProduct.createdAt || new Date().toISOString(),
             viewCount: backendProduct.viewCount || 0,
-                   imageUrl: backendProduct.imageUrl || null,
+            imageUrl: backendProduct.imageUrl || null,
+            tradeType: mapBackendLocationToFrontend(backendProduct.location || backendProduct.tradeType),
           };
           setProduct(frontendProduct);
           setCurrentPrice(frontendProduct.price);
@@ -139,7 +285,8 @@ function ChatRoomPage() {
           // 상대방 정보 설정
           setPartnerInfo({
             nickname: sellerNickname,
-            avatarUrl: '' // 기본 아바타 없음
+            avatarUrl: '', // 기본 아바타 없음
+            userId: backendProduct.seller?.id || null,
           });
           
           console.log('ChatRoomPage: Product set successfully');
@@ -153,13 +300,17 @@ function ChatRoomPage() {
           });
           if (ctxProduct) {
             console.log('ChatRoomPage: Product found in GlobalContext');
-            setProduct(ctxProduct);
+            setProduct({
+              ...ctxProduct,
+              tradeType: ctxProduct.tradeType || mapBackendLocationToFrontend(ctxProduct.location || ctxProduct.tradeType),
+            });
             setCurrentPrice(ctxProduct.price);
             
             // 상대방 정보 설정
             setPartnerInfo({
               nickname: ctxProduct.sellerNickname || ctxProduct.nickname || 'Unknown',
-              avatarUrl: '' // 기본 아바타 없음
+              avatarUrl: '', // 기본 아바타 없음
+              userId: ctxProduct.sellerId || null,
             });
           } else {
             console.error('ChatRoomPage: Product not found anywhere', { productId, productsCount: products.length });
@@ -186,7 +337,8 @@ function ChatRoomPage() {
             // 상대방 정보 설정
             setPartnerInfo({
               nickname: ctxProduct.sellerNickname || ctxProduct.nickname || 'Unknown',
-              avatarUrl: '' // 기본 아바타 없음
+              avatarUrl: '', // 기본 아바타 없음
+              userId: ctxProduct.sellerId || null,
             });
           }
         } catch (e) {
@@ -224,19 +376,49 @@ function ChatRoomPage() {
               const rId = r?.id ? Number(r.id) : null;
               return rId !== null && currentUserId !== null && rId === currentUserId;
             });
+
+          let messageType = 'text';
+          let textContent = msg.content || '';
+          let imagePayload = null;
+          let qrPayload = null;
+          if (typeof msg.content === 'string') {
+            try {
+              const parsed = JSON.parse(msg.content);
+              if (parsed && typeof parsed === 'object') {
+                if (parsed.kind === 'IMAGE' && parsed.dataUrl) {
+                  messageType = 'image';
+                  imagePayload = parsed;
+                  textContent = parsed.caption || '';
+                } else if (parsed.type === 'SIM_QR') {
+                  messageType = 'system_qr';
+                  qrPayload = { qrCode: parsed.qrCode, for: parsed.for };
+                  textContent = parsed.text || '';
+                } else if (parsed.type) {
+                  messageType = 'system';
+                  textContent = parsed.message || textContent;
+                }
+              }
+            } catch (err) {
+              // JSON 파싱 실패 시 무시하고 텍스트로 간주
+            }
+          }
           
           return {
             id: msg.id,
             sender: isMyMessage ? 'me' : 'partner',
             content: msg.content,
-            text: msg.content,
+            text: textContent,
             nickname: msg.nickname,
             timestamp: msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-            type: msg.content && msg.content.startsWith('{') ? 'system' : 'text', // JSON이면 시스템 메시지
-            isRead: isMyMessage ? true : isReadByMe, // 자신이 보낸 메시지는 항상 읽음, 상대방 메시지는 readBy 확인
+            type: messageType,
+            imageUrl: imagePayload?.dataUrl || null,
+            imageMeta: imagePayload,
+            isRead: isMyMessage ? true : isReadByMe,
             createdAt: msg.createdAt,
-            user: msg.user, // 원본 user 정보 보관 (읽음 처리 시 필요)
-            readBy: msg.readBy // 원본 readBy 정보 보관
+            user: msg.user,
+            readBy: msg.readBy,
+            qrCode: qrPayload?.qrCode || null,
+            for: qrPayload?.for || null,
           };
         });
         setMessages(converted);
@@ -376,8 +558,9 @@ function ChatRoomPage() {
       wsRef.current = null;
     }
 
-    const wsUrl = `ws://localhost:9090/chatserver/${currentUser.username}`;
+    const wsUrl = `${WS_BASE_URL}/chatserver/${currentUser.username}`;
     console.log('Connecting to WebSocket:', wsUrl);
+    setWsStatus('connecting');
     const ws = new WebSocket(wsUrl);
     
     let isConnecting = true;
@@ -385,6 +568,7 @@ function ChatRoomPage() {
     
     ws.onopen = () => {
       console.log('ChatRoomPage: ✅ WebSocket connected successfully');
+      setWsStatus('connected');
       isConnecting = false;
       
       // WebSocket 연결 후 약간의 지연을 두고 읽지 않은 메시지 확인
@@ -406,15 +590,47 @@ function ChatRoomPage() {
           if (msgProductId === currentProductId) {
             // 상품 ID가 일치하는 메시지만 추가
             const isMyMessage = data.nickname === currentUser.nickname;
+            let incomingType = 'text';
+            let textContent = data.content;
+            let imagePayload = null;
+            let qrPayload = null;
+            if (typeof data.content === 'string') {
+              try {
+                const parsed = JSON.parse(data.content);
+                if (parsed && typeof parsed === 'object') {
+                  if (parsed.kind === 'IMAGE' && parsed.dataUrl) {
+                    incomingType = 'image';
+                    imagePayload = parsed;
+                    textContent = parsed.caption || '';
+                  } else if (parsed.type === 'SIM_QR') {
+                    incomingType = 'system_qr';
+                    qrPayload = { qrCode: parsed.qrCode, for: parsed.for };
+                    textContent = parsed.text || '';
+                  } else if (parsed.type) {
+                    incomingType = 'system';
+                    textContent = parsed.message || textContent;
+                  }
+                }
+              } catch (err) {
+                // ignore parse error
+              }
+            }
             const newMsg = {
               id: data.messageId || Date.now(),
               sender: isMyMessage ? 'me' : 'partner',
               content: data.content,
-              text: data.content,
+              text: textContent,
               nickname: data.nickname,
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              type: 'text',
-              isRead: isMyMessage ? true : false // 자신이 보낸 메시지는 즉시 읽음 처리
+              type: incomingType,
+              imageUrl: imagePayload?.dataUrl || null,
+              imageMeta: imagePayload,
+              isRead: isMyMessage ? true : false, // 자신이 보낸 메시지는 즉시 읽음 처리
+              createdAt: data.createdAt,
+              user: data.user,
+              readBy: data.readBy,
+              qrCode: qrPayload?.qrCode || null,
+              for: qrPayload?.for || null,
             };
             setMessages(prev => {
               // 중복 방지: 이미 같은 ID의 메시지가 있으면 추가하지 않음
@@ -422,6 +638,15 @@ function ChatRoomPage() {
               if (exists) return prev;
               return [...prev, newMsg];
             });
+            if (!isMyMessage) {
+              window.dispatchEvent(new CustomEvent('chat:new-message', {
+                detail: {
+                  productId: msgProductId,
+                  content: data.content,
+                  incoming: true,
+                },
+              }));
+            }
           }
         } else if (data.type === 'READ') {
           // 읽음 처리 메시지 수신 (상대방이 내 메시지를 읽었을 때 또는 내가 상대방 메시지를 읽었을 때)
@@ -454,7 +679,7 @@ function ChatRoomPage() {
                     // 이미 readBy에 있는지 확인
                     const alreadyInReadBy = updatedReadBy.some(r => {
                       const rId = r?.id ? Number(r.id) : null;
-                      return rId !== null && userIdToAdd !== null && rId === userIdToAdd;
+                      return rId !== null && currentUserId !== null && rId === currentUserId;
                     });
                     
                     if (!alreadyInReadBy) {
@@ -503,11 +728,13 @@ function ChatRoomPage() {
     
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      setWsStatus('error');
       isConnecting = false;
     };
     
     ws.onclose = (event) => {
       console.log('WebSocket disconnected:', event.code, event.reason);
+      setWsStatus('closed');
       isConnecting = false;
       // 정상 종료(1000)가 아니면 재연결 시도 (단, cleanup으로 인한 종료는 제외)
       if (event.code !== 1000 && wsRef.current === ws) {
@@ -525,6 +752,7 @@ function ChatRoomPage() {
       if (wsRef.current === ws) {
         wsRef.current.close(1000, 'Component unmounting');
         wsRef.current = null;
+        setWsStatus('closed');
       }
     };
   }, [currentUser?.username, productId]); // username과 productId만 변경될 때 재연결
@@ -606,6 +834,7 @@ function ChatRoomPage() {
             // READ 메시지를 보낸 메시지 ID 기록
             sentReadMessagesRef.current.add(msg.id);
             console.log('ChatRoomPage: ✅ Sent READ message (from messages useEffect) for messageId:', msg.id, 'productId:', productId);
+            window.dispatchEvent(new CustomEvent('chat:messages-read', { detail: { productId } }));
           } catch (error) {
             console.error('ChatRoomPage: ❌ Failed to send read message (from messages useEffect):', error);
           }
@@ -615,6 +844,36 @@ function ChatRoomPage() {
   }, [messages, productId, currentUser?.id]); // messages가 변경될 때마다 실행
 
   // 시스템 메시지 추가 함수
+  const notify = (message) => {
+    if (!message) return;
+    window.dispatchEvent(new CustomEvent('app:notify', { detail: { message } }));
+  };
+
+  const getCurrentWalletBalance = () => {
+    if (Number.isFinite(walletBalance)) return walletBalance;
+    if (currentUser?.id) return readWalletBalance(currentUser.id);
+    return DEFAULT_WALLET_BALANCE;
+  };
+
+  const adjustWallet = (userId, delta) => {
+    if (!userId || !delta) return;
+    const current = readWalletBalance(userId);
+    const next = Math.max(0, current + delta);
+    writeWalletBalance(userId, next);
+    if (currentUser?.id === userId) {
+      setWalletBalance(next);
+    }
+  };
+
+  const rechargeCurrentUser = (amount) => {
+    if (!currentUser?.id || !amount) return;
+    const base = getCurrentWalletBalance();
+    const next = base + amount;
+    setWalletBalance(next);
+    writeWalletBalance(currentUser.id, next);
+    notify(`${amount.toLocaleString('ko-KR')}원을 충전했습니다.`);
+  };
+
   const addSystemMessage = (text) => {
     const newMsg = {
       id: Date.now(),
@@ -632,6 +891,297 @@ function ChatRoomPage() {
         return [...prev, newMsg]; // 새 메시지 추가
     });
   };
+
+  const loadRemoteSession = useCallback(
+    async (targetProductId, { silent = false } = {}) => {
+      if (!isRemoteTrade || !targetProductId) {
+        return null;
+      }
+
+      if (!silent) {
+        setRemoteSessionLoading(true);
+        setRemoteSessionError(null);
+      }
+
+      try {
+        const data = await getRemoteTradeSession(targetProductId);
+        applySessionUpdate(data);
+        setRemoteSessionError(null);
+        return data;
+      } catch (error) {
+        const message = error.message || '거래 상태를 불러오지 못했습니다.';
+        setRemoteSessionError(message);
+        if (!silent) {
+          notify(message);
+        } else {
+          console.warn('Remote trade session load failed:', message);
+        }
+        return null;
+      } finally {
+        if (!silent) {
+          setRemoteSessionLoading(false);
+        }
+      }
+    },
+    [applySessionUpdate, isRemoteTrade, notify]
+  );
+
+  const handleRemoteTradeAction = () => {
+    if (!isRemoteTrade) {
+      notify('비대면 거래에서만 이용 가능한 기능입니다.');
+      return;
+    }
+    if (!productId) {
+      notify('상품 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    if (isSellerView) {
+      handleSellerTradeAction();
+    } else if (isBuyerView) {
+      handleBuyerTradeAction();
+    } else {
+      notify('판매자 또는 구매자만 이용할 수 있는 기능입니다.');
+    }
+  };
+
+  const handleSellerTradeAction = async () => {
+    if (!productId) return;
+    if (!isSellerView) {
+      notify('판매자만 물품 보관을 진행할 수 있습니다.');
+      return;
+    }
+
+    try {
+      if (tradePhase === 'IDLE') {
+        setRemoteSessionLoading(true);
+        const session = await sellerStartRemoteTrade(productId);
+        applySessionUpdate(session);
+        setSellerModalStep(0);
+        setIsSellerModalOpen(true);
+        notify('판매자용 QR이 생성되었습니다. 키오스크에서 스캔해주세요.');
+      } else if (tradePhase === 'SELLER_QR') {
+        setSellerModalStep(0);
+        setIsSellerModalOpen(true);
+      } else if (tradePhase === 'SELLER_DEPOSITED') {
+        setSellerModalStep(1);
+        setIsSellerModalOpen(true);
+      } else if (tradePhase === 'BUYER_QR') {
+        setSellerModalStep(1);
+        setIsSellerModalOpen(true);
+        notify('구매자의 결제를 기다리는 중입니다.');
+      } else if (tradePhase === 'COMPLETED') {
+        notify('거래가 이미 완료되었습니다.');
+      }
+    } catch (error) {
+      notify(error.message || '물품 등록 처리 중 오류가 발생했습니다.');
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  const handleSellerComplete = async () => {
+    if (!productId) return;
+    try {
+      setRemoteSessionLoading(true);
+      const session = await sellerCompleteRemoteTrade(productId);
+      applySessionUpdate(session);
+      notify('물품 보관이 완료되었습니다. 구매자의 결제를 기다립니다.');
+      setIsSellerModalOpen(false);
+      loadRemoteSession(productId, { silent: true });
+    } catch (error) {
+      notify(error.message || '보관 완료 처리 중 오류가 발생했습니다.');
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  const handleBuyerTradeAction = () => {
+    if (!isBuyerView) {
+      notify('구매자만 이용할 수 있는 기능입니다.');
+      return;
+    }
+    if (!isRemoteTrade) {
+      notify('비대면 거래에서만 이용 가능한 기능입니다.');
+      return;
+    }
+    if (tradePhase === 'SELLER_DEPOSITED') {
+      setBuyerModalStep(0);
+      setIsBuyerModalOpen(true);
+    } else if (tradePhase === 'BUYER_QR') {
+      setBuyerModalStep(1);
+      setIsBuyerModalOpen(true);
+    } else if (tradePhase === 'COMPLETED') {
+      notify('거래가 이미 완료되었습니다.');
+    } else {
+      notify('판매자가 물품 등록을 완료하면 결제를 진행할 수 있습니다.');
+    }
+  };
+
+  const handleBuyerPayment = async () => {
+    if (!currentUser?.id || !productId) return null;
+    if (tradePhase !== 'SELLER_DEPOSITED' && tradePhase !== 'BUYER_QR') {
+      notify('결제를 진행할 수 있는 상태가 아닙니다.');
+      return null;
+    }
+
+    const amountSource = remoteSession?.currentPrice ?? currentPrice;
+    const numericAmount = Number(amountSource);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      notify('결제 금액 정보를 불러오지 못했습니다.');
+      return null;
+    }
+
+    const balance = getCurrentWalletBalance();
+    if (balance < numericAmount) {
+      notify('잔액이 부족합니다. 충전 후 다시 시도해주세요.');
+      return null;
+    }
+
+    try {
+      setRemoteSessionLoading(true);
+      const session = await buyerPayRemoteTrade(productId, numericAmount);
+      adjustWallet(currentUser.id, -numericAmount);
+      applySessionUpdate(session);
+      setBuyerModalStep(1);
+      notify('결제가 완료되었습니다. 수령용 QR이 발급되었습니다.');
+      return session;
+    } catch (error) {
+      notify(error.message || '결제 처리 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  const handleBuyerComplete = async () => {
+    if (!currentUser?.id || !productId) return null;
+    if (tradePhase !== 'BUYER_QR') {
+      notify('수령을 진행할 수 있는 상태가 아닙니다.');
+      return null;
+    }
+
+    const amountSource = remoteSession?.buyerEscrowAmount ?? remoteSession?.currentPrice ?? currentPrice;
+    const numericAmount = Number(amountSource);
+
+    try {
+      setRemoteSessionLoading(true);
+      const session = await buyerCompleteRemoteTrade(productId);
+      applySessionUpdate(session);
+
+      const sellerId = product?.sellerId;
+      if (sellerId && numericAmount && !Number.isNaN(numericAmount)) {
+        adjustWallet(sellerId, numericAmount);
+        if (currentUserId === sellerId) {
+          notify(`${numericAmount.toLocaleString('ko-KR')}원이 정산되었습니다.`);
+        }
+      }
+
+      notify('수령이 완료되었습니다.');
+      setIsBuyerModalOpen(false);
+      return session;
+    } catch (error) {
+      notify(error.message || '수령 완료 처리 중 오류가 발생했습니다.');
+      return null;
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  const handlePriceAdjustSave = async (newPrice) => {
+    if (!productId) return;
+    const numericPrice = Number(newPrice);
+    if (Number.isNaN(numericPrice) || numericPrice <= 0) {
+      notify('올바른 가격을 입력해주세요.');
+      return;
+    }
+
+    try {
+      setRemoteSessionLoading(true);
+      const session = await proposePriceRemoteTrade(productId, numericPrice);
+      applySessionUpdate(session);
+      notify(`가격을 ${numericPrice.toLocaleString('ko-KR')}원으로 제안했습니다.`);
+      setIsPriceModalOpen(false);
+    } catch (error) {
+      notify(error.message || '가격 제안 중 오류가 발생했습니다.');
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  const handlePriceProposalDecision = async (accept) => {
+    if (!productId || !remoteSession?.priceProposal?.proposalId) return;
+    try {
+      setRemoteSessionLoading(true);
+      const session = await respondPriceProposal(productId, remoteSession.priceProposal.proposalId, accept);
+      applySessionUpdate(session);
+      notify(accept ? '가격 제안을 수락했습니다.' : '가격 제안을 거절했습니다.');
+    } catch (error) {
+      notify(error.message || '가격 제안 응답 처리 중 오류가 발생했습니다.');
+    } finally {
+      setRemoteSessionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (remoteSessionPollRef.current) {
+      clearInterval(remoteSessionPollRef.current);
+      remoteSessionPollRef.current = null;
+    }
+
+    if (!isRemoteTrade || !productId) {
+      setRemoteSession(null);
+      setRemoteSessionError(null);
+      setRemoteSessionLoading(false);
+      return;
+    }
+
+    loadRemoteSession(productId, { silent: false });
+
+    return () => {
+      if (remoteSessionPollRef.current) {
+        clearInterval(remoteSessionPollRef.current);
+        remoteSessionPollRef.current = null;
+      }
+    };
+  }, [productId, isRemoteTrade, loadRemoteSession]);
+
+  useEffect(() => {
+    if (!isRemoteTrade || !productId) {
+      return;
+    }
+
+    if (remoteSessionPollRef.current) {
+      clearInterval(remoteSessionPollRef.current);
+      remoteSessionPollRef.current = null;
+    }
+
+    if (tradePhase === 'COMPLETED') {
+      return;
+    }
+
+    remoteSessionPollRef.current = setInterval(() => {
+      loadRemoteSession(productId, { silent: true });
+    }, REMOTE_SESSION_POLL_INTERVAL);
+
+    return () => {
+      if (remoteSessionPollRef.current) {
+        clearInterval(remoteSessionPollRef.current);
+        remoteSessionPollRef.current = null;
+      }
+    };
+  }, [tradePhase, productId, isRemoteTrade, loadRemoteSession]);
+
+  useEffect(() => {
+    if (remoteSession?.currentPrice != null) {
+      const numeric = Number(remoteSession.currentPrice);
+      if (!Number.isNaN(numeric)) {
+        setCurrentPrice(numeric);
+        if (product?.id) {
+          updateProduct(product.id, { price: numeric });
+        }
+      }
+    }
+  }, [remoteSession?.currentPrice, product?.id, updateProduct]);
 
   // 일반 메시지 전송 핸들러
   const handleSendMessage = (e) => {
@@ -663,6 +1213,12 @@ function ChatRoomPage() {
         ws.send(JSON.stringify(messageData));
     setNewMessage(''); // 입력창 비우기
         console.log('Message sent via WebSocket:', messageData);
+        window.dispatchEvent(new CustomEvent('chat:new-message', {
+          detail: {
+            productId,
+            content: messageData.content,
+          }
+        }));
       } catch (error) {
         console.error('Failed to send message:', error);
         alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
@@ -673,25 +1229,98 @@ function ChatRoomPage() {
     }
   };
 
+  const handleImageSelect = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      notify('이미지 용량은 5MB 이하여야 합니다.');
+      return;
+    }
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      notify('채팅 서버와 연결되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      if (!dataUrl || typeof dataUrl !== 'string') {
+        notify('이미지를 불러오지 못했습니다.');
+        setIsUploadingImage(false);
+        return;
+      }
+
+      const payload = {
+        kind: 'IMAGE',
+        name: file.name,
+        size: file.size,
+        mime: file.type,
+        dataUrl,
+        source: fileCaptureMode,
+        caption: '',
+        createdAt: new Date().toISOString(),
+      };
+
+      const messageData = {
+        type: 'TALK',
+        content: JSON.stringify(payload),
+        productId,
+      };
+
+      try {
+        wsRef.current.send(JSON.stringify(messageData));
+        window.dispatchEvent(new CustomEvent('chat:new-message', {
+          detail: {
+            productId,
+            content: messageData.content,
+          },
+        }));
+        notify('이미지를 전송했습니다.');
+      } catch (err) {
+        console.error('이미지 메시지 전송 실패:', err);
+        notify('이미지 전송에 실패했습니다.');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    };
+    reader.onerror = () => {
+      notify('이미지 파일을 읽는 중 오류가 발생했습니다.');
+      setIsUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // + 버튼 기능 선택 핸들러
   const handleFeatureSelect = (feature) => {
-    setIsFeaturesModalOpen(false); // 기능 모달 닫기
-    if (feature === 'schedule') {
-      // 판매자 시간표 없으면 ChatFeaturesModal에서 버튼 비활성화되므로 추가 체크 불필요
-      setIsScheduleModalOpen(true); // 일정 추천 모달 열기
-    }
-    if (feature === 'payment') {
-      // 구매자만 결제 가능하도록 (선택 사항)
-      if (isSellerView) {
-          alert('판매자는 결제할 수 없습니다.'); // 판매자일 경우 알림
+    switch (feature) {
+      case 'image':
+        setFileCaptureMode('any');
+        setTimeout(() => fileInputRef.current?.click(), 0);
+        break;
+      case 'schedule':
+        if (!partnerUserId) {
+          notify('상대방 시간표 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.');
           return;
-      }
-      setIsPaymentModalOpen(true); // 결제 모달 열기
+        }
+        setIsScheduleModalOpen(true);
+        break;
+      case 'price-adjust':
+        if (!isSellerView) {
+          notify('판매자만 가격을 조정할 수 있습니다.');
+          return;
+        }
+        setIsPriceModalOpen(true);
+        break;
+      case 'remote-trade':
+        handleRemoteTradeAction();
+        break;
+      default:
+        notify('해당 기능은 준비 중입니다.');
     }
-     // TODO: 다른 기능들 (앨범, 카메라 등) 추가
-     if (feature !== 'schedule' && feature !== 'payment') {
-         alert(`${feature} 기능 준비 중`);
-     }
   };
 
   // 거래 일정 선택 완료 핸들러
@@ -723,21 +1352,6 @@ function ChatRoomPage() {
     }
     setIsPriceModalOpen(false); // 가격 조정 모달 닫기
   };
-
-  // --- 비대면 결제 성공 핸들러 ---
-  const handlePaymentSuccess = (paymentResponse) => {
-    // 백엔드에서 받은 결제 응답 사용
-    // paymentResponse: { paymentId, status, sellerCode, buyerCode }
-    console.log('ChatRoomPage: Payment success, response:', paymentResponse);
-    
-    // 결제 완료 시스템 메시지 추가
-    addSystemMessage(`구매자가 ${currentPrice.toLocaleString('ko-KR')}원 결제를 완료했습니다. (시스템 보관 중)`);
-    
-    // 백엔드에서 알림 메시지가 자동으로 발송되므로, 여기서는 추가 메시지를 생성하지 않음
-    // 백엔드 NotificationService가 판매자에게 PAYMENT_STARTED 알림을 보내고,
-    // 그 알림에 sellerCode가 포함되어 있음
-  };
-
 
   // --- 메시지 타입별 렌더링 함수 ---
 
@@ -778,6 +1392,48 @@ function ChatRoomPage() {
         {!isMine && (
           <div className="message-meta">
             {showUnread && <span className="message-read-status">1</span>} {/* 상대방 메시지 중 읽지 않은 것만 표시 */}
+            <span>{msg.timestamp}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderImageMessage = (msg) => {
+    const msgUserId = msg.user?.id ? Number(msg.user.id) : null;
+    const currentUserId = currentUser?.id ? Number(currentUser.id) : null;
+    const isMine = msg.sender === 'me' || (msgUserId !== null && currentUserId !== null && msgUserId === currentUserId);
+
+    let showUnread = false;
+    if (!isMine) {
+      const isReadByMe = msg.readBy && Array.isArray(msg.readBy) &&
+        msg.readBy.some(r => {
+          const rId = r?.id ? Number(r.id) : null;
+          return rId !== null && currentUserId !== null && rId === currentUserId;
+        });
+      showUnread = !isReadByMe;
+    }
+
+    return (
+      <div key={msg.id} className={`message-row ${isMine ? 'mine' : 'partner'}`}>
+        {isMine && (
+          <div className="message-meta">
+            <span>{msg.timestamp}</span>
+          </div>
+        )}
+        <div className={`message-bubble image-bubble ${isMine ? 'mine' : 'partner'}`}>
+          {msg.imageUrl && (
+            <img
+              src={msg.imageUrl}
+              alt={msg.imageMeta?.name || '보낸 이미지'}
+              className="chat-image"
+            />
+          )}
+          {msg.text && <p className="image-caption">{msg.text}</p>}
+        </div>
+        {!isMine && (
+          <div className="message-meta">
+            {showUnread && <span className="message-read-status">1</span>}
             <span>{msg.timestamp}</span>
           </div>
         )}
@@ -838,6 +1494,95 @@ function ChatRoomPage() {
      );
   };
 
+  const renderPriceProposalMessage = () => {
+    const proposal = remoteSession?.priceProposal;
+    if (!proposal) return null;
+
+    const status = proposal.status;
+    const isPending = status === 'PENDING';
+    const isAccepted = status === 'ACCEPTED';
+    const isRejected = status === 'REJECTED';
+    const proposedByMe =
+      proposal.proposedByUserId !== null &&
+      proposal.proposedByUserId !== undefined &&
+      currentUserId !== null &&
+      Number(proposal.proposedByUserId) === currentUserId;
+
+    const priceValue = proposal.price !== null && proposal.price !== undefined ? Number(proposal.price) : null;
+    const priceLabel =
+      priceValue !== null && !Number.isNaN(priceValue)
+        ? `${priceValue.toLocaleString('ko-KR')}원`
+        : '금액 정보 없음';
+
+    const proposedAt = proposal.proposedAt
+      ? new Date(proposal.proposedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : null;
+
+    const respondedAt = proposal.respondedAt
+      ? new Date(proposal.respondedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : null;
+
+    return (
+      <div key="price-proposal" className={`message-row ${proposedByMe ? 'mine' : 'partner'}`}>
+        {proposedByMe && (
+          <div className="message-meta">
+            {proposedAt && <span>{proposedAt}</span>}
+          </div>
+        )}
+        <div className={`message-bubble price-proposal ${proposedByMe ? 'mine' : 'partner'}`}>
+          <div className="proposal-header">
+            <span className="proposal-title">가격 제안</span>
+            <span className={`proposal-status proposal-${status?.toLowerCase()}`}>{priceLabel}</span>
+          </div>
+          <div className="proposal-body">
+            <p className="proposal-text">
+              {proposedByMe
+                ? '구매자의 응답을 기다립니다.'
+                : `${proposal.proposedByNickname || '판매자'}님이 가격을 조정했습니다.`}
+            </p>
+            {isAccepted && (
+              <p className="proposal-result">가격 제안이 수락되었습니다. 새로운 거래 금액으로 진행됩니다.</p>
+            )}
+            {isRejected && (
+              <p className="proposal-result rejected">가격 제안이 거절되었습니다.</p>
+            )}
+            {respondedAt && (
+              <p className="proposal-timestamp">응답 시간: {respondedAt}</p>
+            )}
+          </div>
+          {isPending && !proposedByMe && isBuyerView && (
+            <div className="proposal-actions">
+              <button
+                type="button"
+                className="proposal-button reject"
+                onClick={() => handlePriceProposalDecision(false)}
+                disabled={remoteSessionLoading}
+              >
+                거절
+              </button>
+              <button
+                type="button"
+                className="proposal-button accept"
+                onClick={() => handlePriceProposalDecision(true)}
+                disabled={remoteSessionLoading}
+              >
+                수락
+              </button>
+            </div>
+          )}
+          {isPending && proposedByMe && (
+            <div className="proposal-await">상대방 응답을 기다리는 중입니다.</div>
+          )}
+        </div>
+        {!proposedByMe && (
+          <div className="message-meta">
+            {proposedAt && <span>{proposedAt}</span>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 시스템 메시지 렌더링 (백엔드 알림 메시지 파싱)
   const renderSystemMessage = (msg) => {
     // 백엔드에서 온 JSON 알림 메시지 파싱
@@ -878,7 +1623,7 @@ function ChatRoomPage() {
             <div className="notification-bubble">
               <p>{message}</p>
               {photoUrl && (
-                <img src={`http://localhost:9090${photoUrl}`} alt="보관함 사진" style={{maxWidth: '100%', margin: '10px 0', borderRadius: '8px'}} />
+                <img src={`${API_BASE_URL}${photoUrl}`} alt="보관함 사진" style={{maxWidth: '100%', margin: '10px 0', borderRadius: '8px'}} />
               )}
               <QRCodeDisplay qrCode={buyerCode} title="구매자용 수령 QR 코드" />
               <p className="qr-instruction">이 QR 코드를 키오스크에서 스캔하여 물품을 수령하세요.</p>
@@ -960,6 +1705,7 @@ function ChatRoomPage() {
     );
   };
 
+
   // 로딩 상태 표시
   if (productLoading) {
     return (
@@ -1019,6 +1765,48 @@ function ChatRoomPage() {
     );
   }
 
+  const tradeActionConfig = (() => {
+    if (!isRemoteTrade) {
+      return {
+        label: '비대면 거래 아님',
+        disabled: true,
+        tooltip: '비대면 거래 상품에서만 이용 가능합니다.',
+      };
+    }
+    if (isSellerView) {
+      return {
+        label: sellerButtonLabel,
+        disabled: sellerButtonDisabled,
+        tooltip: tradePhase === 'COMPLETED' ? '거래가 이미 완료되었습니다.' : undefined,
+      };
+    }
+    if (isBuyerView) {
+      let tooltip;
+      if (tradePhase === 'IDLE' || tradePhase === 'SELLER_QR') {
+        tooltip = '판매자가 물품을 등록하면 이용할 수 있습니다.';
+      } else if (tradePhase === 'COMPLETED') {
+        tooltip = '거래가 이미 완료되었습니다.';
+      }
+      return {
+        label: buyerButtonLabel,
+        disabled: buyerButtonDisabled,
+        tooltip,
+      };
+    }
+    return {
+      label: '거래 정보 없음',
+      disabled: true,
+      tooltip: '판매자 또는 구매자만 이용할 수 있습니다.',
+    };
+  })();
+
+  const priceAdjustDisabled = !isSellerView || tradePhase === 'COMPLETED';
+  const priceAdjustTooltip = !isSellerView
+    ? '판매자만 가격을 조정할 수 있습니다.'
+    : tradePhase === 'COMPLETED'
+    ? '완료된 거래에서는 가격을 변경할 수 없습니다.'
+    : undefined;
+
   // --- 메인 렌더링 ---
   return (
     <div className="chat-room-page">
@@ -1026,7 +1814,13 @@ function ChatRoomPage() {
       <header className="chat-room-header">
         <button onClick={() => navigate('/chat')} className="back-button" style={{position: 'static'}}>{'<'}</button>
         <h2 className="chat-room-partner-name">{partnerInfo?.nickname || product.sellerNickname || 'Unknown'}</h2>
-        {/* TODO: 채팅방 메뉴 버튼 (나가기, 신고하기 등) */}
+        <span className={`chat-connection-status status-${wsStatus}`}>
+          {wsStatus === 'idle' && '대기'}
+          {wsStatus === 'connected' && '연결됨'}
+          {wsStatus === 'connecting' && '연결 중...'}
+          {wsStatus === 'closed' && '연결 종료'}
+          {wsStatus === 'error' && '오류'}
+        </span>
       </header>
 
       {/* --- 상단 거래 상품 정보 헤더 --- */}
@@ -1037,17 +1831,75 @@ function ChatRoomPage() {
         isSellerView={isSellerView} // 현재 사용자가 판매자인지 여부 전달
       />
 
+      {isRemoteTrade && (
+        <div className="remote-trade-status">
+          <div className="remote-trade-info">
+            <span className={`phase-badge phase-${tradePhase.toLowerCase()}`}>{remotePhaseLabel}</span>
+            <p className="phase-text">{remotePhaseDescription}</p>
+            {remoteSession?.lockerNumber && tradePhase !== 'IDLE' && (
+              <p className="phase-subtext">배정된 캐비닛: {remoteSession.lockerNumber}번</p>
+            )}
+            {remoteSession?.buyerEscrowAmount && tradePhase === 'BUYER_QR' && (
+              <p className="phase-subtext">
+                결제 금액: {Number(remoteSession.buyerEscrowAmount).toLocaleString('ko-KR')}원
+              </p>
+            )}
+            {remoteSessionError && (
+              <p className="phase-subtext phase-error">{remoteSessionError}</p>
+            )}
+            {remoteSessionLoading && <p className="phase-loading">거래 상태를 동기화하는 중...</p>}
+          </div>
+          <div className="remote-trade-actions">
+            {isSellerView && (
+              <button
+                type="button"
+                className="remote-trade-button"
+                onClick={handleSellerTradeAction}
+                disabled={sellerButtonDisabled}
+              >
+                {sellerButtonLabel}
+              </button>
+            )}
+            {isBuyerView && (
+              <button
+                type="button"
+                className="remote-trade-button"
+                onClick={handleBuyerTradeAction}
+                disabled={buyerButtonDisabled}
+              >
+                {buyerButtonLabel}
+              </button>
+            )}
+            <button
+              type="button"
+              className="remote-guide-button"
+              onClick={() => setShowGuideModal(true)}
+              title="비대면 거래 이용 안내"
+            >
+              ?
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* --- 메시지 목록 --- */}
       <main className="message-list">
         {messages.map(msg => {
           // 메시지 타입에 따라 적절한 렌더링 함수 호출
           switch (msg.type) {
-            case 'trade_schedule': return renderTradeScheduleMessage(msg);
-            case 'system': return renderSystemMessage(msg);
-            case 'system_qr': return renderQrMessage(msg);
-            default: return renderTextMessage(msg); // 타입 없거나 텍스트면 기본 렌더링
+            case 'trade_schedule':
+              return renderTradeScheduleMessage(msg);
+            case 'system':
+              return renderSystemMessage(msg);
+            case 'system_qr':
+              return renderQrMessage(msg);
+            case 'image':
+              return renderImageMessage(msg);
+            default:
+              return renderTextMessage(msg);
           }
         })}
+        {renderPriceProposalMessage()}
         {/* 스크롤 위치 조정을 위한 빈 div */}
         <div ref={messageEndRef} />
       </main>
@@ -1067,6 +1919,17 @@ function ChatRoomPage() {
           <button type="submit" className="chat-send-button">전송</button>
         </form>
       </div>
+      {isUploadingImage && (
+        <div className="chat-upload-indicator">이미지 전송 중...</div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture={fileCaptureMode === 'camera' ? 'environment' : undefined}
+        style={{ display: 'none' }}
+        onChange={handleImageSelect}
+      />
 
       {/* --- 모달 렌더링 영역 --- */}
       {/* 기능 선택 모달 */}
@@ -1074,15 +1937,19 @@ function ChatRoomPage() {
         <ChatFeaturesModal
           onClose={() => setIsFeaturesModalOpen(false)}
           onFeatureSelect={handleFeatureSelect}
-          sellerHasTimetable={product.sellerHasTimetable} // 상품 정보에서 시간표 유무 전달
+          sellerHasTimetable={product.sellerHasTimetable ?? true}
+          tradeAction={tradeActionConfig}
+          priceAdjustDisabled={priceAdjustDisabled}
+          priceAdjustTooltip={priceAdjustTooltip}
         />
       )}
       {/* 일정 추천 모달 */}
       {isScheduleModalOpen && (
         <TradeScheduleRecommendModal
-          partnerNickname={partnerInfo?.nickname || product.sellerNickname || 'Unknown'} // 상대방 닉네임 전달
+          partnerNickname={partnerInfo?.nickname || product.sellerNickname || '상대방'}
+          partnerUserId={partnerUserId}
           onClose={() => setIsScheduleModalOpen(false)}
-          onScheduleSelect={handleScheduleSelect} // 일정 선택 시 호출될 함수 전달
+          onSendRecommendation={handleScheduleRecommendationSend}
         />
       )}
       {/* 가격 조정 모달 (판매자 뷰일 때만) */}
@@ -1090,19 +1957,41 @@ function ChatRoomPage() {
         <PriceAdjustModal
           currentPrice={currentPrice} // 현재 가격 전달
           onClose={() => setIsPriceModalOpen(false)}
-          onSave={handlePriceAdjust} // 저장 시 호출될 함수 전달
+          onSave={handlePriceAdjustSave} // 저장 시 호출될 함수 전달
         />
       )}
-      {/* 비대면 결제 모달 (구매자 뷰일 때만) */}
-      {isPaymentModalOpen && !isSellerView && (
-        <PaymentModal
-          productId={productId} // 상품 ID 전달 (필수)
-          productName={product.title} // 상품명 전달
-          price={currentPrice} // 현재 가격 전달
-          onClose={() => setIsPaymentModalOpen(false)}
-          onPaymentSuccess={handlePaymentSuccess} // 결제 성공 시 호출될 함수 전달
+      {isSellerModalOpen && (
+        <SellerDepositModal
+          open={isSellerModalOpen}
+          step={sellerModalStep}
+          onClose={() => {
+            setIsSellerModalOpen(false);
+            setSellerModalStep(0);
+          }}
+          onStepChange={setSellerModalStep}
+          onComplete={handleSellerComplete}
+          session={remoteSession}
+          loading={remoteSessionLoading}
         />
       )}
+      {isBuyerModalOpen && (
+        <BuyerPickupModal
+          open={isBuyerModalOpen}
+          step={buyerModalStep}
+          onClose={() => {
+            setIsBuyerModalOpen(false);
+            setBuyerModalStep(0);
+          }}
+          onStepChange={setBuyerModalStep}
+          onPay={handleBuyerPayment}
+          onComplete={handleBuyerComplete}
+          session={remoteSession}
+          walletBalance={getCurrentWalletBalance()}
+          onRecharge={rechargeCurrentUser}
+          loading={remoteSessionLoading}
+        />
+      )}
+      {showGuideModal && <RemoteGuideStepperModal onClose={() => setShowGuideModal(false)} />}
     </div>
   );
 }

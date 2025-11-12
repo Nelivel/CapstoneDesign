@@ -19,11 +19,43 @@
   width: 90%;
   max-width: 380px;
 }
+.recommend-description {
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  margin-top: 6px;
+}
+.recommend-loading {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.95em;
+  color: var(--primary-color);
+}
+.recommend-error {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.9em;
+  color: #d63f3f;
+  font-weight: 600;
+}
+.recommend-message {
+  margin-top: 18px;
+  font-size: 0.95em;
+  color: rgba(0, 0, 0, 0.75);
+  line-height: 1.4;
+}
 .recommend-list {
   margin-top: 15px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+.recommend-empty {
+  text-align: center;
+  font-size: 0.9em;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
 }
 .recommend-item {
   padding: 12px;

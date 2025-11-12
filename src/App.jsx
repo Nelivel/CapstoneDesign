@@ -1,11 +1,12 @@
 // src/App.jsx
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './index.css';
 import { AnimatePresence } from 'framer-motion';
 // --- Provider 임포트 ---
 import { NavigationProvider } from './context/NavigationContext'; // NavigationProvider 임포트
 import { GlobalProvider } from './context/GlobalContext';       // GlobalProvider 임포트 (필요함)
+import GlobalNotifier from './components/GlobalNotifier';
 
 // 컴포넌트 임포트
 import AnimatedPage from './components/AnimatedPage';
@@ -15,6 +16,7 @@ import RequireAuth from './components/RequireAuth';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
+import WelcomePage from './pages/WelcomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductPostPage from './pages/ProductPostPage';
 import FavoriteProductsPage from './pages/FavoriteProductsPage';
@@ -27,14 +29,20 @@ import SellHistoryPage from './pages/SellHistoryPage';
 import BuyHistoryPage from './pages/BuyHistoryPage';
 import ReputationPage from './pages/ReputationPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
+import AccountProfileSettingsPage from './pages/AccountProfileSettingsPage';
+import AccountNotificationSettingsPage from './pages/AccountNotificationSettingsPage';
+import AccountPasswordChangePage from './pages/AccountPasswordChangePage';
+import AccountDeletionPage from './pages/AccountDeletionPage';
+import HiddenPostsPage from './pages/HiddenPostsPage';
 import KioskHomePage from './pages/KioskHomePage';
 import KioskScanPage from './pages/KioskScanPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import ForgotAccountPage from './pages/ForgotAccountPage';
 
 function App() {
   const location = useLocation();
 
-  const showNavBarRoutes = ['/', '/chat', '/favorites', '/mypage'];
+  const showNavBarRoutes = ['/home', '/chat', '/favorites', '/mypage'];
   const isKioskRoute = location.pathname.startsWith('/kiosk');
   const shouldShowNavBar = showNavBarRoutes.includes(location.pathname) && !isKioskRoute;
 
@@ -58,18 +66,23 @@ function App() {
 
   return (
     <div className="app-container" style={{...appContainerStyle, display: 'flex', flexDirection: 'column'}}>
+      <GlobalNotifier />
       <main style={{flex: 1, position: 'relative'}}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* --- 라우트 설정은 동일 --- */}
-            <Route path="/" element={<RequireAuth><AnimatedPage><HomePage /></AnimatedPage></RequireAuth>} />
+            <Route path="/" element={<Navigate to="/welcome" replace />} />
+            <Route path="/welcome" element={<AnimatedPage><WelcomePage /></AnimatedPage>} />
+            <Route path="/home" element={<RequireAuth><AnimatedPage><HomePage /></AnimatedPage></RequireAuth>} />
             <Route path="/login" element={<AnimatedPage><LoginPage /></AnimatedPage>} />
             <Route path="/signup" element={<AnimatedPage><SignUpPage /></AnimatedPage>} />
+            <Route path="/account-recovery" element={<AnimatedPage><ForgotAccountPage /></AnimatedPage>} />
             <Route path="/verify-email" element={<AnimatedPage><VerifyEmailPage /></AnimatedPage>} />
             <Route path="/product/:id" element={<RequireAuth><AnimatedPage><ProductDetailPage /></AnimatedPage></RequireAuth>} />
             <Route path="/post" element={<RequireAuth><AnimatedPage><ProductPostPage /></AnimatedPage></RequireAuth>} />
             <Route path="/favorites" element={<RequireAuth><AnimatedPage><FavoriteProductsPage /></AnimatedPage></RequireAuth>} />
             <Route path="/mypage" element={<RequireAuth><AnimatedPage><MyPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/hidden-posts" element={<RequireAuth><AnimatedPage><HiddenPostsPage /></AnimatedPage></RequireAuth>} />
             <Route path="/timetable" element={<RequireAuth><AnimatedPage><TimetableDisplayPage /></AnimatedPage></RequireAuth>} />
             <Route path="/timetable/manage" element={<RequireAuth><AnimatedPage><TimetableManagePage /></AnimatedPage></RequireAuth>} />
             <Route path="/chat" element={<RequireAuth><AnimatedPage><ChatListPage /></AnimatedPage></RequireAuth>} />
@@ -78,9 +91,14 @@ function App() {
             <Route path="/history/buy" element={<RequireAuth><AnimatedPage><BuyHistoryPage /></AnimatedPage></RequireAuth>} />
             <Route path="/reputation" element={<RequireAuth><AnimatedPage><ReputationPage /></AnimatedPage></RequireAuth>} />
             <Route path="/settings/account" element={<RequireAuth><AnimatedPage><AccountSettingsPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/settings/account/profile" element={<RequireAuth><AnimatedPage><AccountProfileSettingsPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/settings/account/notifications" element={<RequireAuth><AnimatedPage><AccountNotificationSettingsPage /></AnimatedPage></RequireAuth>} />
+            <Route path="/settings/account/password" element={<RequireAuth><AnimatedPage><AccountPasswordChangePage /></AnimatedPage></RequireAuth>} />
+            <Route path="/settings/account/delete" element={<RequireAuth><AnimatedPage><AccountDeletionPage /></AnimatedPage></RequireAuth>} />
             
             <Route path="/kiosk" element={<KioskHomePage />} />
             <Route path="/kiosk/scan/:mode" element={<KioskScanPage />} />
+            <Route path="*" element={<Navigate to="/welcome" replace />} />
           </Routes>
         </AnimatePresence>
       </main>

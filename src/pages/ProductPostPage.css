@@ -150,3 +150,57 @@
   font-size: 0.9em;
   margin-top: -10px;
 }
+
+.post-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.post-modal-card {
+  background: #fff;
+  width: calc(100% - 60px);
+  max-width: 320px;
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
+}
+
+.post-modal-card h3 {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.post-modal-card p {
+  font-size: 0.95em;
+  color: var(--sub-text-color);
+  margin-bottom: 20px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.post-modal-button {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f8cff, #3570f4);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.post-modal-button:hover {
+  opacity: 0.9;
+}

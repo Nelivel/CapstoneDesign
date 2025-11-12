@@ -1,0 +1,101 @@
+.forgot-page {
+  padding: 20px;
+  background-color: #f7f8fb;
+  min-height: 100vh;
+}
+
+.forgot-title {
+  text-align: center;
+  font-size: 1.3em;
+  margin-bottom: 6px;
+}
+
+.forgot-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.forgot-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.tab-button {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d0d7de;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tab-button.active {
+  background: linear-gradient(135deg, #4f8cff, #3570f4);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(53, 112, 244, 0.25);
+}
+.tab-button:not(.active):hover {
+  border-color: #4f8cff;
+  color: #3570f4;
+}
+.forgot-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.forgot-section h3 {
+  margin: 0;
+  font-size: 1.05em;
+}
+
+.forgot-section label {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.forgot-section input {
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  font-size: 0.95em;
+}
+.error-message {
+  color: #d9534f;
+  font-size: 0.85em;
+  margin: 0;
+}
+.success-card {
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #e7f3ff;
+  color: #0b5394;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.forgot-section button {
+  margin-top: 6px;
+}
+
+.helper-text {
+  font-size: 0.85em;
+  color: #777;
+  margin: 0;
+}
+
+.result-message {
+  font-size: 0.9em;
+  color: #0b5394;
+  margin: 6px 0 0;
+}

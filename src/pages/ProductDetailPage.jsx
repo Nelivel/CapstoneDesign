@@ -1,13 +1,14 @@
 // src/pages/ProductDetailPage.jsx
 import React, { useState, useEffect } from 'react'; // useState, useEffect 추가
 import { useParams, useNavigate } from 'react-router-dom'; // useNavigate 추가
-import { getProductById } from '../api/productApi'; // API 함수 임포트
+import { getProductById, hideProduct as hideProductRequest, deleteProduct as deleteProductRequest, mapBackendLocationToFrontend } from '../api/productApi'; // API 함수 임포트
 import { checkFavoriteStatus, addFavorite, removeFavorite } from '../api/favoriteApi'; // 관심상품 API
 import { getMe } from '../api/authApi'; // 현재 사용자 정보
 import { formatTimeAgo } from '../utils/timeUtils';
 import { MOCK_USERS } from '../data/users'; // 아직 Seller 정보는 mock 사용
 import './ProductDetailPage.css';
 import '../components/ProductCard.css';
+import ProductMenuModal from '../components/ProductMenuModal';
 
 function ProductDetailPage() {
   const { id } = useParams(); // 라우트 파라미터 이름이 'id'인지 확인
@@ -20,6 +21,103 @@ function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const notify = (message) => {
+    if (!message) return;
+    window.dispatchEvent(new CustomEvent('app:notify', { detail: { message } }));
+  };
+
+  const getHiddenStorageKey = (userId) => `hiddenProducts_${userId}`;
+  const getReportedStorageKey = (userId) => `reportedPosts_${userId}`;
+
+  const loadHiddenIds = (userId) => {
+    if (!userId) return [];
+    try {
+      const stored = localStorage.getItem(getHiddenStorageKey(userId));
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((id) => {
+        const numeric = Number(id);
+        return Number.isNaN(numeric) ? id : numeric;
+      });
+    } catch (err) {
+      console.warn('숨긴 게시글 정보를 불러오지 못했습니다.', err);
+      return [];
+    }
+  };
+
+  const loadReportedIds = (userId) => {
+    if (!userId) return [];
+    try {
+      const stored = localStorage.getItem(getReportedStorageKey(userId));
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((id) => {
+        const numeric = Number(id);
+        return Number.isNaN(numeric) ? id : numeric;
+      });
+    } catch (err) {
+      console.warn('신고한 게시글 정보를 불러오지 못했습니다.', err);
+      return [];
+    }
+  };
+
+  const persistHiddenId = (userId, productId) => {
+    if (!userId || !productId) return;
+    try {
+      const key = getHiddenStorageKey(userId);
+      const stored = localStorage.getItem(key);
+      const numericId = Number(productId);
+      const normalizedId = Number.isNaN(numericId) ? productId : numericId;
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(parsed)) {
+        localStorage.setItem(key, JSON.stringify([normalizedId]));
+        window.dispatchEvent(new CustomEvent('hiddenProductsUpdated', { detail: { ids: loadHiddenIds(userId) } }));
+        return;
+      }
+      const hasId = parsed.some((id) => {
+        const numeric = Number(id);
+        const normalized = Number.isNaN(numeric) ? id : numeric;
+        return normalized === normalizedId;
+      });
+      if (hasId) return;
+      const updated = [...parsed, normalizedId];
+      localStorage.setItem(key, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('hiddenProductsUpdated', { detail: { ids: loadHiddenIds(userId) } }));
+    } catch (err) {
+      console.warn('숨긴 게시글 정보를 로컬에 저장하지 못했습니다.', err);
+    }
+  };
+
+  const persistReportedId = (userId, productId) => {
+    if (!userId || !productId) return;
+    try {
+      const key = getReportedStorageKey(userId);
+      const stored = localStorage.getItem(key);
+      const numericId = Number(productId);
+      const normalizedId = Number.isNaN(numericId) ? productId : numericId;
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(parsed)) {
+        localStorage.setItem(key, JSON.stringify([normalizedId]));
+        window.dispatchEvent(new CustomEvent('reportedProductsUpdated', { detail: { ids: [normalizedId] } }));
+        return;
+      }
+      const hasId = parsed.some((id) => {
+        const numeric = Number(id);
+        const normalized = Number.isNaN(numeric) ? id : numeric;
+        return normalized === normalizedId;
+      });
+      if (hasId) return;
+      const updated = [...parsed, normalizedId];
+      localStorage.setItem(key, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('reportedProductsUpdated', { detail: { ids: loadReportedIds(userId) } }));
+    } catch (err) {
+      console.warn('신고한 게시글 정보를 로컬에 저장하지 못했습니다.', err);
+    }
+  };
 
   // productId가 변경될 때마다 상품 정보 불러오기
   useEffect(() => {
@@ -79,7 +177,7 @@ function ProductDetailPage() {
       }
     };
 
-    fetchProduct();
+      fetchProduct();
 
     // 현재 사용자 정보 로드
     (async () => {
@@ -109,6 +207,7 @@ function ProductDetailPage() {
   // --- 백엔드 응답 -> 프론트엔드 데이터 구조 변환 함수 ---
   const mapBackendProductToFrontend = (backendProduct) => {
     const sellerNickname = backendProduct.seller?.nickname || backendProduct.seller?.username || 'Unknown Seller';
+    const tradeType = mapBackendLocationToFrontend(backendProduct.location || backendProduct.tradeType);
     return {
       id: backendProduct.id,
       sellerId: backendProduct.seller?.id || null, // 판매자 ID 저장
@@ -123,6 +222,8 @@ function ProductDetailPage() {
       category: mapBackendCategoryToFrontend(backendProduct.category),
       createdAt: backendProduct.createdAt || new Date().toISOString(),
       viewCount: backendProduct.viewCount || 0,
+      tradeType,
+      tradeTypeLabel: tradeType === 'NONE_PERSON' ? '비대면 거래' : '대면 거래',
     };
   };
   const mapBackendStatusToFrontend = (backendStatus) => { /* ... HomePage 함수와 동일 ... */
@@ -164,10 +265,10 @@ function ProductDetailPage() {
     } catch (err) {
       console.error('관심상품 토글 실패:', err);
       if (err.response?.status === 401 || err.sessionExpired) {
-        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-        navigate('/login');
+        notify('세션이 만료되었습니다. 다시 로그인해주세요.');
+        navigate('/welcome');
       } else {
-        alert('관심상품 등록/해제에 실패했습니다: ' + (err.response?.data?.error || err.message));
+        notify('관심상품 등록/해제에 실패했습니다: ' + (err.response?.data?.error || err.message));
       }
     }
   };
@@ -175,15 +276,15 @@ function ProductDetailPage() {
   // 채팅하기 핸들러
   const handleChatClick = async () => {
     if (!product || !currentUser) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
+      notify('로그인이 필요합니다.');
+      navigate('/welcome');
       return;
     }
 
     // 본인이 올린 상품인지 확인
     const isMyProduct = currentUser && product.sellerId && (Number(currentUser.id) === Number(product.sellerId));
     if (isMyProduct) {
-      alert('자신이 올린 상품에는 채팅을 보낼 수 없습니다.');
+      notify('자신이 올린 상품에는 채팅을 보낼 수 없습니다.');
       return;
     }
 
@@ -204,8 +305,83 @@ function ProductDetailPage() {
       });
     } catch (err) {
       console.error('채팅방 이동 실패:', err);
-      alert('채팅방으로 이동하는데 실패했습니다.');
+      notify('채팅방으로 이동하는데 실패했습니다.');
     }
+  };
+
+  const isOwner = !!currentUser && !!product && (
+    (product.sellerId && Number(currentUser.id) === Number(product.sellerId)) ||
+    (currentUser.username && product.nickname && currentUser.username === product.nickname) ||
+    (currentUser.nickname && product.nickname && currentUser.nickname === product.nickname)
+  );
+
+  const handleEdit = () => {
+    setIsMenuOpen(false);
+    if (!product) return;
+    window.dispatchEvent(new CustomEvent('app:notify', { detail: { message: '상품 수정 기능은 추후 제공될 예정입니다.' } }));
+  };
+
+  const handleDelete = async () => {
+    if (!product) {
+      setIsMenuOpen(false);
+      return;
+    }
+    const confirmed = window.confirm('해당 게시글을 삭제하시겠습니까?');
+    if (!confirmed) return;
+    try {
+      await deleteProductRequest(product.id);
+      window.dispatchEvent(new CustomEvent('app:notify', { detail: { message: '게시글이 삭제되었습니다.' } }));
+      navigate('/home');
+    } catch (err) {
+      console.error('게시글 삭제 실패:', err);
+      const message = err.response?.data?.message || err.response?.data || err.message || '게시글 삭제 중 오류가 발생했습니다.';
+      notify(message);
+    } finally {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const applyHide = async (message) => {
+    if (!product) {
+      setIsMenuOpen(false);
+      return;
+    }
+    try {
+      await hideProductRequest(product.id);
+    } catch (err) {
+      console.warn('게시글 숨김 API 호출에 실패했습니다. 로컬에만 반영합니다.', err);
+      notify('숨김 기능이 로컬 모드로 동작합니다.');
+    }
+    if (currentUser?.id) {
+      persistHiddenId(currentUser.id, product.id);
+    }
+    notify(message);
+    setIsMenuOpen(false);
+    navigate('/home');
+  };
+
+  const handleHide = () => {
+    applyHide('이 게시글이 홈 피드에서 숨겨졌습니다.');
+  };
+
+  const handleReport = () => {
+    const userId = currentUser?.id;
+    if (userId) {
+      const reportedList = loadReportedIds(userId);
+      const numericId = Number(product.id);
+      const normalizedId = Number.isNaN(numericId) ? product.id : numericId;
+      if (reportedList.includes(normalizedId)) {
+        notify('이미 신고한 게시글입니다.');
+        setIsMenuOpen(false);
+        return;
+      }
+      persistReportedId(userId, normalizedId);
+    } else {
+      notify('로그인이 필요합니다.');
+      setIsMenuOpen(false);
+      return;
+    }
+    applyHide('신고가 접수되었습니다. 해당 게시글을 숨김 처리했습니다.');
   };
 
   const getMannerFace = (credits) => { /* ... 기존 함수 ... */
@@ -234,7 +410,7 @@ function ProductDetailPage() {
         <div style={{ fontSize: '0.9em', color: '#666', marginBottom: '10px' }}>
           상품 ID: {productId || '없음'}
         </div>
-        <button onClick={() => navigate('/')} style={{ padding: '10px 20px', marginTop: '10px' }}>
+        <button onClick={() => navigate('/home')} style={{ padding: '10px 20px', marginTop: '10px' }}>
           홈으로 돌아가기
         </button>
       </div>
@@ -247,7 +423,7 @@ function ProductDetailPage() {
         <div style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
           상품 ID: {productId || '없음'}
         </div>
-        <button onClick={() => navigate('/')} style={{ padding: '10px 20px', marginTop: '10px' }}>
+        <button onClick={() => navigate('/home')} style={{ padding: '10px 20px', marginTop: '10px' }}>
           홈으로 돌아가기
         </button>
       </div>
@@ -259,6 +435,13 @@ function ProductDetailPage() {
     <div className="detail-page">
       <header className="detail-header">
         <button onClick={() => navigate(-1)} className="back-button" style={{position: 'static', fontSize: '1.2em'}}>{'<'}</button>
+        <button
+          className="detail-menu-button"
+          onClick={() => setIsMenuOpen(true)}
+          disabled={loading || !product}
+        >
+          ⋮
+        </button>
       </header>
 
       <main className="detail-main">
@@ -300,7 +483,8 @@ function ProductDetailPage() {
         <div className="product-content">
           <h1 className="title">{product.title}</h1>
           <div className="product-meta-info">
-            <span>{product.category}</span>
+            <span>{product.tradeTypeLabel}</span>
+            <span>• {product.category}</span>
             <span>• {formatTimeAgo(product.createdAt)}</span>
             <span>• 조회 {product.viewCount}</span>
           </div>
@@ -337,6 +521,17 @@ function ProductDetailPage() {
             : '채팅하기'}
         </button>
       </footer>
+
+      {isMenuOpen && (
+        <ProductMenuModal
+          isOwner={isOwner}
+          onClose={() => setIsMenuOpen(false)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onHide={handleHide}
+          onReport={handleReport}
+        />
+      )}
     </div>
   );
 }

@@ -49,6 +49,17 @@
   color: #e53e3e; /* 신고하기 버튼 붉은색 */
 }
 
+.menu-modal-button:disabled {
+  color: #bbb;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.menu-modal-button.danger {
+  color: #e53e3e;
+  font-weight: 600;
+}
+
 .menu-modal-button.cancel {
   font-weight: bold;
 }

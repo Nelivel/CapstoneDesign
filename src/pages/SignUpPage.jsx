@@ -16,6 +16,7 @@ function SignUpPage() {
   const [loading, setLoading] = useState(false); // 로딩 상태
   const [signupSuccess, setSignupSuccess] = useState(false); // 회원가입 성공 상태
   const [signupEmail, setSignupEmail] = useState(''); // 회원가입한 이메일 저장
+  const [resendMessage, setResendMessage] = useState('');
 
   // 이메일 형식 검증
   const isValidEmail = (email) => {
@@ -41,31 +42,31 @@ function SignUpPage() {
     
     // 입력 검증
     if (!username.trim()) {
-      alert('아이디를 입력해주세요.');
+      setError('아이디를 입력해주세요.');
       return;
     }
     if (!nickname.trim()) {
-      alert('닉네임을 입력해주세요.');
+      setError('닉네임을 입력해주세요.');
       return;
     }
     if (!email.trim()) {
-      alert('이메일 주소를 입력해주세요.');
+      setError('이메일 주소를 입력해주세요.');
       return;
     }
     if (!isValidEmail(email)) {
-      alert('올바른 이메일 형식이 아닙니다.');
+      setError('올바른 이메일 형식이 아닙니다.');
       return;
     }
     if (!password) {
-      alert('비밀번호를 입력해주세요.');
+      setError('비밀번호를 입력해주세요.');
       return;
     }
     if (!isValidPassword(password)) {
-      alert('비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.');
+      setError('비밀번호는 8자 이상이며 영문과 숫자를 포함해야 합니다.');
       return;
     }
     if (password !== confirmPassword) {
-      alert('비밀번호가 일치하지 않습니다.');
+      setError('비밀번호가 일치하지 않습니다.');
       return;
     }
 
@@ -75,10 +76,9 @@ function SignUpPage() {
       const response = await signup(username, password, nickname, email);
       setSignupSuccess(true);
       setSignupEmail(email);
-      alert('회원가입이 완료되었습니다.\n입력하신 이메일로 인증 링크가 전송되었습니다.\n이메일을 확인해주세요.');
+      setResendMessage('입력하신 이메일로 인증 링크가 전송되었습니다. 이메일을 확인해주세요.');
     } catch (err) {
       const errorMessage = err.response?.data || err.message || '회원가입 중 오류가 발생했습니다.';
-      alert(errorMessage);
       setError(errorMessage);
       console.error('회원가입 실패:', err);
     } finally {
@@ -89,16 +89,16 @@ function SignUpPage() {
   // 인증 링크 재전송
   const handleResendVerification = async () => {
     if (!signupEmail) {
-      alert('이메일 정보가 없습니다.');
+      setResendMessage('이메일 정보가 없습니다.');
       return;
     }
     try {
       setLoading(true);
       await resendVerificationEmail(signupEmail);
-      alert('인증 링크가 재전송되었습니다.\n이메일을 확인해주세요.');
+      setResendMessage('인증 링크가 재전송되었습니다. 이메일을 확인해주세요.');
     } catch (err) {
       const errorMessage = err.response?.data || err.message || '인증 링크 재전송에 실패했습니다.';
-      alert(errorMessage);
+      setResendMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,6 +122,7 @@ function SignUpPage() {
           <div className="email-info">
             <strong>이메일:</strong> {signupEmail}
           </div>
+          {resendMessage && <p className="success-message" style={{marginTop: '10px'}}>{resendMessage}</p>}
           <div className="verification-actions">
             <button 
               onClick={handleResendVerification} 

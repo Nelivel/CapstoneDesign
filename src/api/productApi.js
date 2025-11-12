@@ -1,6 +1,14 @@
 // src/api/productApi.js
 import api from './index';
 
+const HIDDEN_API_ENABLED = import.meta.env.VITE_ENABLE_REMOTE_HIDDEN_API === 'true';
+
+function createHiddenApiUnavailableError() {
+  const fallbackError = new Error('HIDDEN_API_UNAVAILABLE');
+  fallbackError.code = 'HIDDEN_API_UNAVAILABLE';
+  return fallbackError;
+}
+
 /**
  * 전체 상품 목록 조회
  * @returns {Promise<Array<object>>} - 상품 목록 (ProductResponse 형태)
@@ -101,6 +109,63 @@ export const deleteProduct = async (id) => {
   }
 };
 
+export const getHiddenProducts = async () => {
+  if (!HIDDEN_API_ENABLED) {
+    throw createHiddenApiUnavailableError();
+  }
+  try {
+    const response = await api.get('/product/hidden');
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.hiddenProductIds)) return data.hiddenProductIds;
+    return [];
+  } catch (error) {
+    const status = error.response?.status;
+    if (status === 400 || status === 404) {
+      console.info('Hidden product API not available. Falling back to local storage.');
+      throw createHiddenApiUnavailableError();
+    }
+    console.error('Get Hidden Products API error:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const hideProduct = async (id) => {
+  if (!HIDDEN_API_ENABLED) {
+    console.info('Hide product API disabled. Operating in local-only mode.');
+    return;
+  }
+  try {
+    await api.post(`/product/${id}/hide`);
+  } catch (error) {
+    const status = error.response?.status;
+    if (status === 400 || status === 404) {
+      console.info('Hide product API not available. Operating in local-only mode.');
+      return;
+    }
+    console.error(`Hide Product (ID: ${id}) API error:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const unhideProduct = async (id) => {
+  if (!HIDDEN_API_ENABLED) {
+    console.info('Unhide product API disabled. Operating in local-only mode.');
+    return;
+  }
+  try {
+    await api.delete(`/product/${id}/hide`);
+  } catch (error) {
+    const status = error.response?.status;
+    if (status === 400 || status === 404) {
+      console.info('Unhide product API not available. Operating in local-only mode.');
+      return;
+    }
+    console.error(`Unhide Product (ID: ${id}) API error:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // --- Helper Functions (프론트 <-> 백엔드 Enum 매핑) ---
 // 실제 값에 맞게 수정 필요!
 
@@ -125,12 +190,27 @@ function mapFrontendStatusToBackend(frontendStatus) {
   }
 }
 
-// 이 함수는 현재 프론트엔드에서 location을 직접 관리하지 않으므로,
-// 상품 등록/수정 시 고정값이나 사용자 선택값을 받아서 처리해야 함.
 function mapFrontendLocationToBackend(frontendLocation) {
-  // 예시: 상품 등록 시 '대면 거래'를 기본값으로 사용
-  // return frontendLocation === '대면' ? 'IN_PERSON' : 'NONE_PERSON';
-  return 'IN_PERSON'; // 임시 기본값
+  if (!frontendLocation) return 'IN_PERSON';
+  if (frontendLocation === 'IN_PERSON' || frontendLocation === 'NONE_PERSON') {
+    return frontendLocation;
+  }
+  if (typeof frontendLocation === 'string') {
+    const normalized = frontendLocation.trim();
+    if (normalized === '대면' || normalized === '대면 거래') return 'IN_PERSON';
+    if (normalized === '비대면' || normalized === '비대면 거래') return 'NONE_PERSON';
+  }
+  return 'IN_PERSON';
+}
+
+export function mapBackendLocationToFrontend(backendLocation) {
+  if (!backendLocation) return 'IN_PERSON';
+  if (backendLocation === 'IN_PERSON' || backendLocation === 'NONE_PERSON') {
+    return backendLocation;
+  }
+  const normalized = String(backendLocation).trim().toUpperCase();
+  if (normalized === 'NONEPERSON' || normalized === 'NONE_PERSON') return 'NONE_PERSON';
+  return 'IN_PERSON';
 }
 
 // 백엔드 Enum -> 프론트엔드 문자열 변환 함수도 필요할 수 있음

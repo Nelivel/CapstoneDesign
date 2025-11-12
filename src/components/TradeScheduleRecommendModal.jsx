@@ -1,68 +1,97 @@
 // src/components/TradeScheduleRecommendModal.jsx
-import React, { useState, useEffect } from 'react';
-import { MOCK_USERS } from '../data/users'; // 1. 경로 수정
-import { useGlobalData } from '../context/GlobalContext'; // 2. 임포트
+import React, { useEffect, useState, useCallback } from 'react';
 import './TradeScheduleRecommendModal.css';
+import { getTimetableRecommendation } from '../api/timetableApi';
 
-// 시나리오 A-1, A-2, E-1 구현
-function TradeScheduleRecommendModal({ partnerNickname, onClose, onScheduleSelect }) {
+function TradeScheduleRecommendModal({
+  partnerNickname,
+  partnerUserId,
+  onClose,
+  onSendRecommendation,
+}) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [recommendations, setRecommendations] = useState([]);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  const { user } = useGlobalData(); // 3. 컨텍스트에서 현재 유저 정보 가져오기
-
-  // 컴포넌트 마운트 시 시간표를 분석하여 추천 생성 (A-1)
-  useEffect(() => {
-    // const myTimetable = MOCK_USERS['me'].timetable; // 4. 삭제
-    const myTimetable = user.timetable; // 5. 컨텍스트의 유저 시간표 사용
-    const partnerTimetable = MOCK_USERS[partnerNickname]?.timetable;
-
-    if (!myTimetable || !partnerTimetable) return; // E-1 (내 시간표가 없을 수도 있음)
-
-    const commonSlots = [];
-    const days = ['월', '화', '수', '목', '금'];
-    for (const day of days) {
-      for (let i = 0; i < 10; i++) { // 9시부터 18시
-        if (myTimetable[day][i] === 1 && partnerTimetable[day][i] === 1) {
-          commonSlots.push({ day, time: `${i + 9}:00 - ${i + 10}:00` });
-        }
-      }
+  const fetchRecommendations = useCallback(async () => {
+    if (!partnerUserId) {
+      setError('상대방 정보를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      setLoading(false);
+      return;
     }
-    // 상위 3개만 추천 (임시 로직)
-    setRecommendations(commonSlots.slice(0, 3));
-  }, [partnerNickname, user]); // 6. user를 dependency array에 추가
+    setLoading(true);
+    setError('');
+    try {
+      const result = await getTimetableRecommendation(partnerUserId);
+      setMessage(result.message || '거래 가능한 시간대를 추천합니다.');
+      setRecommendations(result.top3Recommendations || []);
+      setSelected(result.top3Recommendations?.[0] || null);
+    } catch (err) {
+      setError(err.message || '추천 정보를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, [partnerUserId]);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
   const handleConfirm = () => {
-    if (selectedSchedule) {
-      onScheduleSelect(selectedSchedule);
+    if (!recommendations.length) {
       onClose();
-    } else {
-      alert('시간을 선택해주세요.');
+      return;
     }
+    onSendRecommendation({
+      message,
+      recommendations,
+      selected: selected || recommendations[0],
+    });
+    onClose();
   };
 
   return (
     <div className="recommend-modal-backdrop">
       <div className="recommend-modal-content">
         <h3>거래 일정 추천</h3>
-        <p style={{fontSize: '0.9em', color: 'var(--sub-text-color)', marginTop: '5px'}}>
-          서로 시간이 가능한 슬롯 3개를 추천합니다.
+        <p className="recommend-description">
+          {partnerNickname ? `${partnerNickname}님과 가능한 시간을 찾아봤어요.` : '공통 비어있는 시간을 찾고 있습니다.'}
         </p>
-        <div className="recommend-list">
-          {recommendations.map((rec, index) => (
-            <div
-              key={index}
-              className={`recommend-item ${selectedSchedule === rec ? 'selected' : ''}`}
-              onClick={() => setSelectedSchedule(rec)}
-            >
-              {rec.day}요일 {rec.time} (장소: 중앙도서관)
+
+        {loading && <p className="recommend-loading">시간표를 분석하는 중입니다...</p>}
+        {!loading && error && <p className="recommend-error" role="alert">{error}</p>}
+
+        {!loading && !error && (
+          <>
+            <p className="recommend-message">{message}</p>
+            <div className="recommend-list">
+              {recommendations.length === 0 && <p className="recommend-empty">공통으로 비어있는 시간이 없습니다.</p>}
+              {recommendations.map((rec, index) => (
+                <div
+                  key={index}
+                  className={`recommend-item ${selected === rec ? 'selected' : ''}`}
+                  onClick={() => setSelected(rec)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setSelected(rec); }}
+                >
+                  {rec}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+
         <div className="recommend-actions">
           <button className="cancel-button" onClick={onClose}>취소</button>
-          <button className="other-button" onClick={() => alert('다른 일정 추천 기능')}>다른 일정 추천</button>
-          <button className="confirm-button" onClick={handleConfirm}>선택</button>
+          <button className="other-button" onClick={fetchRecommendations} disabled={loading}>
+            다시 추천
+          </button>
+          <button className="confirm-button" onClick={handleConfirm} disabled={loading || !!error}>
+            채팅에 공유
+          </button>
         </div>
       </div>
     </div>

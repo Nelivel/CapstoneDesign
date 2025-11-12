@@ -64,6 +64,113 @@ export const resendVerificationEmail = async (email) => {
 };
 
 /**
+ * 학교 이메일 인증 요청
+ */
+export const requestSchoolVerification = async (schoolEmail) => {
+  try {
+    const response = await api.post('/auth/request-school-verification', null, {
+      params: { schoolEmail }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('School verification request error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const requestUsernameReminder = async (email) => {
+  try {
+    const response = await api.post('/auth/forgot-username', null, {
+      params: { email }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Forgot username error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await api.post('/auth/forgot-password', null, {
+      params: { email }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Forgot password error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const updateNickname = async (nickname) => {
+  try {
+    const response = await api.put('/users/me/nickname', { nickname });
+    return response.data;
+  } catch (error) {
+    console.error('Update nickname error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const deleteAccount = async () => {
+  try {
+    const response = await api.delete('/users/me');
+    return response.data;
+  } catch (error) {
+    console.error('Delete account error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const updateNotificationPreferences = async (prefs) => {
+  try {
+    const response = await api.put('/users/me/notifications', prefs);
+    return response.data;
+  } catch (error) {
+    console.error('Update notifications error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+export const changePassword = async ({ currentPassword, newPassword, confirmPassword }) => {
+  try {
+    const response = await api.put('/users/me/password', { currentPassword, newPassword, confirmPassword });
+    return response.data;
+  } catch (error) {
+    console.error('Change password error:', error.response?.data || error.message);
+    if (error.response?.data) {
+      throw new Error(error.response.data);
+    }
+    throw error;
+  }
+};
+
+/**
+ * 1차 이메일 인증 재확인용 (토큰 클릭 후 상태 새로고침)
+ */
+export const fetchVerificationStatus = async () => {
+  return getMe();
+};
+
+/**
  * 현재 로그인한 사용자 정보 조회
  */
 export const getMe = async () => {

@@ -10,7 +10,7 @@ function RequireAuth({ children }) {
   useEffect(() => {
     // 로그인 페이지는 RequireAuth를 거치지 않으므로 여기서는 체크 불필요
     // 하지만 만약 로그인 페이지에 도착했는데 여전히 체크하고 있다면 즉시 종료
-    if (location.pathname === '/login' || location.pathname === '/signup' || location.pathname.startsWith('/verify-email')) {
+    if (location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/welcome' || location.pathname.startsWith('/verify-email')) {
       setChecking(false);
       return;
     }
@@ -23,7 +23,7 @@ function RequireAuth({ children }) {
       localStorage.removeItem('logout');
       setChecking(false);
       // window.location을 사용하여 React Router를 완전히 우회
-      window.location.href = window.location.origin + '/login';
+      window.location.href = window.location.origin + '/welcome';
       return;
     }
     
@@ -42,7 +42,7 @@ function RequireAuth({ children }) {
         
         if (!mounted) return;
         if (!me) {
-          navigate('/login', { replace: true, state: { from: location.pathname } });
+          navigate('/welcome', { replace: true, state: { from: location.pathname } });
         } else {
           setChecking(false);
         }
@@ -50,7 +50,7 @@ function RequireAuth({ children }) {
         if (!mounted) return;
         // 401이면 로그인 페이지로, 다른 에러면 잠시 후 재시도
         if (e.response?.status === 401) {
-          navigate('/login', { replace: true, state: { from: location.pathname } });
+          navigate('/welcome', { replace: true, state: { from: location.pathname } });
         } else {
           // 네트워크 오류 등은 잠시 후 재시도
           setTimeout(async () => {
@@ -60,10 +60,10 @@ function RequireAuth({ children }) {
               if (me) {
                 setChecking(false);
               } else {
-                navigate('/login', { replace: true, state: { from: location.pathname } });
+                navigate('/welcome', { replace: true, state: { from: location.pathname } });
               }
             } catch (_) {
-              navigate('/login', { replace: true, state: { from: location.pathname } });
+              navigate('/welcome', { replace: true, state: { from: location.pathname } });
             }
           }, 500);
         }

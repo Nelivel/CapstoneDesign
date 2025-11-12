@@ -6,7 +6,7 @@ import { formatTimeAgo } from '../utils/timeUtils'; // 1. 유틸리티 임포트
 import './ProductCard.css';
 import ProductMenuModal from './ProductMenuModal';
 
-function ProductCard({ product }) {
+function ProductCard({ product, currentUser, onHide, onDelete, onEdit, onReport, reportedProductIds = [] }) {
   const navigate = useNavigate(); // react-router의 useNavigate 직접 사용
   const [isFavorite, setIsFavorite] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,10 +32,16 @@ function ProductCard({ product }) {
     return () => clearTimeout(timeoutId);
   }, [product.id]);
 
+  const isOwner = !!currentUser && !!product && (
+    (product.sellerId && Number(currentUser.id) === Number(product.sellerId)) ||
+    (currentUser.username && product.nickname && currentUser.username === product.nickname) ||
+    (currentUser.nickname && product.nickname && currentUser.nickname === product.nickname)
+  );
+
   const handleCardClick = () => {
     if (!product.id) {
       console.error('Product ID is missing:', product);
-      alert('상품 ID가 없습니다.');
+      showToast('상품 ID가 없습니다.');
       return;
     }
     console.log('Navigating to product:', product.id);
@@ -52,20 +58,22 @@ function ProductCard({ product }) {
         await removeFavorite(product.id);
         setIsFavorite(false);
         console.log('Favorite removed successfully');
+        showToast('관심상품에서 제거되었습니다.');
       } else {
         console.log('Adding favorite for product:', product.id);
         await addFavorite(product.id);
         setIsFavorite(true);
         console.log('Favorite added successfully');
+        showToast('관심상품에 추가되었습니다.');
       }
     } catch (err) {
       console.error('관심상품 토글 실패:', err);
       if (err.response?.status === 401 || err.sessionExpired) {
-        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+        showToast('세션이 만료되었습니다. 다시 로그인해주세요.');
         // 로그인 페이지로 이동
-        window.location.href = '/login';
+        window.location.href = '/welcome';
       } else {
-        alert('관심상품 등록/해제에 실패했습니다: ' + (err.response?.data?.error || err.message));
+        showToast('관심상품 등록/해제에 실패했습니다: ' + (err.response?.data?.error || err.message));
       }
     }
   };
@@ -75,9 +83,74 @@ function ProductCard({ product }) {
     setIsMenuOpen(true);
   };
 
-  const handleReport = () => {
+  const showToast = (message) => {
+    window.dispatchEvent(new CustomEvent('app:notify', { detail: { message } }));
+  };
+
+  const handleEdit = () => {
     setIsMenuOpen(false);
-    alert(`${product.title} 상품이 신고되었습니다.`);
+    if (onEdit) {
+      onEdit(product.id, product);
+    } else {
+      showToast('상품 수정 기능은 추후 제공될 예정입니다.');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) {
+      setIsMenuOpen(false);
+      showToast('게시글 삭제 기능을 사용할 수 없습니다.');
+      return;
+    }
+    const confirmDelete = window.confirm('해당 게시글을 삭제하시겠습니까?');
+    if (!confirmDelete) return;
+    try {
+      await onDelete(product.id);
+      showToast('게시글이 삭제되었습니다.');
+    } catch (err) {
+      console.error('게시글 삭제 실패:', err);
+      const message = err.response?.data?.message || err.response?.data || err.message || '게시글 삭제 중 오류가 발생했습니다.';
+      showToast(message);
+    } finally {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const handleHide = async () => {
+    if (!onHide) {
+      setIsMenuOpen(false);
+      showToast('게시글 숨기기 기능을 사용할 수 없습니다.');
+      return;
+    }
+    try {
+      await onHide(product.id);
+      showToast('해당 게시글이 홈 피드에서 숨겨졌습니다.');
+    } catch (err) {
+      console.error('게시글 숨김 실패:', err);
+      const message = err.response?.data?.message || err.response?.data || err.message || '게시글 숨김 처리 중 오류가 발생했습니다.';
+      showToast(message);
+    } finally {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const handleReport = async () => {
+    setIsMenuOpen(false);
+    if (!onReport) {
+      showToast('신고가 접수되었습니다. 해당 게시글을 숨김 처리했습니다.');
+      return;
+    }
+    if (reportedProductIds?.includes(product.id)) {
+      showToast('이미 신고한 게시글입니다.');
+      return;
+    }
+    try {
+      await onReport(product.id, product);
+    } catch (err) {
+      console.error('게시글 신고 처리 실패:', err);
+      const message = err?.message || '신고 처리 중 오류가 발생했습니다.';
+      showToast(message);
+    }
   };
 
   const getStatusText = (status, price) => {
@@ -113,6 +186,9 @@ function ProductCard({ product }) {
           <h3 className="product-card-title">{product.title}</h3>
           {/* 2. 닉네임과 시간 표시를 한 줄로 묶음 */}
           <div className="product-card-meta">
+            <span className={`trade-type-pill ${product.tradeType === 'NONE_PERSON' ? 'remote' : 'in-person'}`}>
+              {product.tradeType === 'NONE_PERSON' ? '비대면' : '대면'}
+            </span>
             <span className="product-card-nickname">{product.nickname}</span>
             {/* 3. 시간 표시 (formatTimeAgo 사용) */}
             <span className="product-card-time">• {formatTimeAgo(product.createdAt)}</span>
@@ -133,8 +209,13 @@ function ProductCard({ product }) {
       </div>
       {isMenuOpen && (
         <ProductMenuModal
+          isOwner={isOwner}
           onClose={() => setIsMenuOpen(false)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onHide={handleHide}
           onReport={handleReport}
+          isReported={reportedProductIds?.includes(product.id)}
         />
       )}
     </>

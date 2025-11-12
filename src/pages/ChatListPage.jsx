@@ -12,6 +12,8 @@ function ChatListPage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const wsRef = useRef(null);
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090').replace(/\/$/, '');
+  const wsBaseUrl = (import.meta.env.VITE_WS_BASE_URL || apiBaseUrl.replace(/^http/, 'ws')).replace(/\/$/, '');
 
   // 현재 사용자 정보 로드
   useEffect(() => {
@@ -303,7 +305,7 @@ function ChatListPage() {
       wsRef.current = null;
     }
 
-    const wsUrl = `ws://localhost:9090/chatserver/${currentUser.username}`;
+    const wsUrl = `${wsBaseUrl}/chatserver/${currentUser.username}`;
     console.log('ChatListPage: Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);
     
@@ -465,7 +467,27 @@ function ChatListPage() {
         wsRef.current = null;
       }
     };
-  }, [currentUser?.username]);
+  }, [currentUser?.username, chatRooms.length, refreshUnreadCounts]);
+
+  useEffect(() => {
+    const handleChatEvent = (event) => {
+      const targetProductId = event.detail?.productId;
+      if (!targetProductId) {
+        refreshUnreadCounts();
+        return;
+      }
+      const exists = chatRooms.some(room => Number(room.productId) === Number(targetProductId));
+      if (exists) {
+        refreshUnreadCounts();
+      }
+    };
+    window.addEventListener('chat:messages-read', handleChatEvent);
+    window.addEventListener('chat:new-message', handleChatEvent);
+    return () => {
+      window.removeEventListener('chat:messages-read', handleChatEvent);
+      window.removeEventListener('chat:new-message', handleChatEvent);
+    };
+  }, [chatRooms, refreshUnreadCounts]);
 
   // 채팅방 목록이 다시 포커스될 때 읽음 상태 업데이트
   useEffect(() => {

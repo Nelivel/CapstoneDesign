@@ -2,7 +2,7 @@
 import React from 'react';
 import './ProductMenuModal.css';
 
-function ProductMenuModal({ onClose, onReport }) {
+function ProductMenuModal({ isOwner, onClose, onEdit, onDelete, onHide, onReport, isReported }) {
   // 모달 외부(백드롭) 클릭 시 닫기
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -13,23 +13,42 @@ function ProductMenuModal({ onClose, onReport }) {
   return (
     <div className="menu-modal-backdrop" onClick={handleBackdropClick}>
       <div className="menu-modal-content">
-        <button className="menu-modal-button" onClick={() => {
-          alert('숨기기 기능 준비 중');
-          onClose();
-        }}>
-          이 글 숨기기
-        </button>
-        <button className="menu-modal-button" onClick={() => {
-          alert('게시글 노출 기준 안내 준비 중');
-          onClose();
-        }}>
-          게시글 노출 기준
-        </button>
-        <button className="menu-modal-button report" onClick={onReport}>
-          신고하기
-        </button>
+        {isOwner ? (
+          <>
+            <button
+              className="menu-modal-button"
+              onClick={() => {
+                onEdit?.();
+              }}
+            >
+              수정하기
+            </button>
+            <button
+              className="menu-modal-button danger"
+              onClick={() => {
+                onDelete?.();
+              }}
+            >
+              삭제하기
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className="menu-modal-button"
+              onClick={() => {
+                onHide?.();
+              }}
+            >
+              이 글 숨기기
+            </button>
+            <button className="menu-modal-button report" onClick={() => onReport?.()} disabled={Boolean(isReported)}>
+              {isReported ? '신고 완료' : '신고하기'}
+            </button>
+          </>
+        )}
         <button className="menu-modal-button cancel" onClick={onClose}>
-          닫기
+          취소
         </button>
       </div>
     </div>

@@ -2,38 +2,56 @@
 import React from 'react';
 import './ChatFeaturesModal.css';
 
-function ChatFeaturesModal({ onClose, onFeatureSelect, sellerHasTimetable }) {
+function ChatFeaturesModal({
+  onClose,
+  onFeatureSelect,
+  sellerHasTimetable,
+  tradeAction,
+  priceAdjustDisabled,
+  priceAdjustTooltip,
+}) {
+  const handleClick = (feature) => {
+    onFeatureSelect(feature);
+    onClose();
+  };
+
   return (
     <div className="features-modal-backdrop" onClick={onClose}>
       <div className="features-modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="feature-button" onClick={() => handleClick('image')}>
+          <div className="feature-icon">🖼️</div>
+          <span>이미지 업로드</span>
+        </button>
+
         <button
           className="feature-button"
-          onClick={() => onFeatureSelect('schedule')}
-          disabled={!sellerHasTimetable} // E-1: 시간표 없으면 비활성화
+          onClick={() => handleClick('schedule')}
+          disabled={!sellerHasTimetable}
           title={!sellerHasTimetable ? '상대방이 시간표를 제공하지 않았습니다.' : ''}
         >
           <div className="feature-icon">🗓️</div>
           <span>거래일정 추천</span>
         </button>
 
-        {/* --- 비대면 결제 버튼 (신규) --- */}
         <button
           className="feature-button"
-          onClick={() => onFeatureSelect('payment')} // 'payment' 기능 선택
+          onClick={() => handleClick('price-adjust')}
+          disabled={priceAdjustDisabled}
+          title={priceAdjustTooltip}
         >
-          <div className="feature-icon">💳</div>
-          <span>비대면 결제</span>
+          <div className="feature-icon">💰</div>
+          <span>가격 조정하기</span>
         </button>
 
-        <button className="feature-button" onClick={() => alert('앨범 기능 준비 중')}>
-          <div className="feature-icon">🖼️</div>
-          <span>앨범</span>
+        <button
+          className="feature-button"
+          onClick={() => handleClick('remote-trade')}
+          disabled={tradeAction?.disabled}
+          title={tradeAction?.tooltip}
+        >
+          <div className="feature-icon">💳</div>
+          <span>{tradeAction?.label ?? '비대면 거래'}</span>
         </button>
-        <button className="feature-button" onClick={() => alert('카메라 기능 준비 중')}>
-          <div className="feature-icon">📷</div>
-          <span>카메라</span>
-        </button>
-        {/* ... 다른 기능 버튼들 추가 ... */}
       </div>
     </div>
   );

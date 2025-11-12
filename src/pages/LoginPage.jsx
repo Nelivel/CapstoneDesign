@@ -53,7 +53,7 @@ function LoginPage() {
         // me가 있고 로그아웃 플래그가 없을 때만 홈으로 이동
         if (me) {
           console.log('User is logged in, redirecting to home');
-          navigate('/', { replace: true });
+          navigate('/home', { replace: true });
         }
       } catch (e) {
         // 로그인 안 되어 있음, 계속 진행
@@ -84,7 +84,7 @@ function LoginPage() {
     setError(''); // 이전 에러 메시지 초기화
     try {
       // login API 호출 - 세션 기반 인증 사용
-      const response = await login(username, password);
+      const response = await login(username.trim(), password);
       
       // 로그인 성공 시 로그아웃 플래그 삭제
       sessionStorage.removeItem('logout');
@@ -104,20 +104,22 @@ function LoginPage() {
       const me = await getMe();
       if (me) {
         // navigate로 이동 (RequireAuth가 자동으로 처리)
-        navigate('/', { replace: true });
+        navigate('/home', { replace: true });
       } else {
         // 재시도 한 번 더
         await new Promise(resolve => setTimeout(resolve, 200));
         const me2 = await getMe();
         if (me2) {
-          navigate('/', { replace: true });
+          navigate('/home', { replace: true });
         } else {
           setError('로그인은 성공했지만 세션 설정에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
         }
       }
     } catch (err) {
       // 로그인 실패 시 에러 메시지 표시
-      setError(err.message || '로그인 실패. 아이디 또는 비밀번호를 확인하세요.');
+      const message = err.message || '로그인 실패. 아이디 또는 비밀번호를 확인하세요.';
+      setError(message);
+      alert(message);
       console.error(err);
     }
   };
@@ -155,7 +157,7 @@ function LoginPage() {
       </div>
       <div className="login-options">
         <span>
-          <button onClick={() => alert('기능 준비 중')} className="link-button">아이디/비밀번호 찾기</button>
+          <button onClick={() => navigate('/account-recovery')} className="link-button">아이디/비밀번호 찾기</button>
         </span>
         <button onClick={() => navigate('/signup')} className="link-button">회원가입</button>
       </div>

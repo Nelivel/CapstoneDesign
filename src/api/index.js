@@ -7,7 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json;charset=UTF-8',
+    Accept: 'application/json',
   },
   // 세션 쿠키를 사용하기 위해 withCredentials 활성화
   withCredentials: true,

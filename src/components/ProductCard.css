@@ -50,13 +50,24 @@
   gap: 4px; /* 닉네임과 점 사이 간격 */
 }
 
-.product-card-nickname {
-  /* 기존 스타일 유지 */
+.trade-type-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-right: 4px;
+  color: #fff;
 }
 
-/* 2. 시간 스타일 (신규) */
-.product-card-time {
-  /* 기존 스타일 유지 */
+.trade-type-pill.in-person {
+  background-color: #4f8cff;
+}
+
+.trade-type-pill.remote {
+  background-color: #6c5ce7;
 }
 
 .product-card-description {

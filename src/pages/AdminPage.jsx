@@ -13,7 +13,7 @@ function AdminPage() {
     setIsAdmin(simulatedAdmin);
     if (!simulatedAdmin) {
       alert('관리자 권한이 필요합니다.');
-      navigate('/');
+      navigate('/home');
     }
   }, [navigate]);
 
@@ -22,7 +22,7 @@ function AdminPage() {
     return (
         <div className="placeholder-page">
             <header className="placeholder-header">
-                <button onClick={() => navigate('/')} className="back-button" style={{position: 'static'}}>{'<'}</button>
+                <button onClick={() => navigate('/home')} className="back-button" style={{position: 'static'}}>{'<'}</button>
                 <h2 className="placeholder-header-title">관리자 페이지</h2>
             </header>
             <main className="placeholder-main">
@@ -37,7 +37,7 @@ function AdminPage() {
   return (
     <div className="placeholder-page">
       <header className="placeholder-header">
-        <button onClick={() => navigate('/')} className="back-button" style={{position: 'static'}}>{'<'}</button>
+        <button onClick={() => navigate('/home')} className="back-button" style={{position: 'static'}}>{'<'}</button>
         <h2 className="placeholder-header-title">관리자 페이지</h2>
       </header>
       <main className="placeholder-main">

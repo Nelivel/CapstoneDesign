@@ -10,7 +10,6 @@ function ProductPostPage() {
   const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('IN_PERSON');
@@ -18,16 +17,23 @@ function ProductPostPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const notify = (message) => {
+    if (!message) return;
+    window.dispatchEvent(new CustomEvent('app:notify', { detail: { message } }));
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB 제한
-        alert('이미지 크기는 5MB 이하여야 합니다.');
+        notify('이미지 크기는 5MB 이하여야 합니다.');
         return;
       }
       if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드 가능합니다.');
+        notify('이미지 파일만 업로드 가능합니다.');
         return;
       }
       setImageFile(file);
@@ -53,10 +59,15 @@ function ProductPostPage() {
     setLoading(true);
 
     try {
+      if (!location) {
+        setError('거래 방식을 선택해주세요.');
+        setLoading(false);
+        return;
+      }
       // 1. 상품 생성
       const productData = {
         productName: title,
-        category: category,
+        category: '기타',
         productPrice: Number(price),
         productDescription: description,
         status: 'selling',
@@ -75,9 +86,9 @@ function ProductPostPage() {
           // 이미지 업로드 실패해도 상품은 등록됨
         }
       }
-
-      alert('상품이 성공적으로 등록되었습니다!');
-      navigate('/'); // 등록 후 홈으로 이동
+      setSuccessMessage('상품이 성공적으로 등록되었습니다!');
+      setShowSuccessModal(true);
+      notify('상품이 성공적으로 등록되었습니다!');
     } catch (err) {
       setError(err.response?.data?.message || '상품 등록 중 오류가 발생했습니다.');
       console.error(err);
@@ -86,10 +97,15 @@ function ProductPostPage() {
     }
   };
 
+  const handleSuccessConfirm = () => {
+    setShowSuccessModal(false);
+    navigate('/home'); // 등록 후 홈으로 이동
+  };
+
   return (
     <div className="post-page">
       <header className="post-header">
-        <button onClick={() => navigate('/')} className="back-button" style={{position: 'static', fontSize: '1.2em'}}>{'<'}</button>
+        <button onClick={() => navigate('/home')} className="back-button" style={{position: 'static', fontSize: '1.2em'}}>{'<'}</button>
         <h2 className="post-header-title">판매 상품 등록</h2>
       </header>
       <main className="post-main">
@@ -135,25 +151,6 @@ function ProductPostPage() {
               required
               maxLength={50}
             />
-          </div>
-
-          {/* 카테고리 */}
-          <div className="form-group">
-            <label htmlFor="category">카테고리 *</label>
-            <select
-              id="category"
-              className="form-select"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-            >
-              <option value="" disabled>카테고리를 선택하세요</option>
-              <option value="교재">교재</option>
-              <option value="전자기기">전자기기</option>
-              <option value="생활용품">생활용품</option>
-              <option value="패션">패션</option>
-              <option value="기타">기타</option>
-            </select>
           </div>
 
           {/* 가격 */}
@@ -222,11 +219,23 @@ function ProductPostPage() {
 
           {error && <p className="error-message">{error}</p>}
           
-          <button type="submit" className="submit-button" disabled={loading || !title || !category || !price || !description}>
+          <button type="submit" className="submit-button" disabled={loading || !title || !price || !description}>
             {loading ? '등록 중...' : '상품 등록하기'}
           </button>
         </form>
       </main>
+
+      {showSuccessModal && (
+        <div className="post-modal-backdrop" role="presentation">
+          <div className="post-modal-card" role="dialog" aria-modal="true">
+            <h3>등록 완료</h3>
+            <p>{successMessage || '상품이 등록되었습니다.'}</p>
+            <button className="post-modal-button" onClick={handleSuccessConfirm}>
+              홈으로 이동
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
