@@ -15,6 +15,8 @@ public class ProductResponseDTO {
     private final Long id;
     private final Long sellerId;
     private final String sellerNickname;
+    private final Long buyerId;
+    private final String buyerNickname;
     private final Category category;
     private final String productName;
     private final String productDescription;
@@ -22,17 +24,21 @@ public class ProductResponseDTO {
     private final Status status;
     private final Location location;
     private final int viewCount;
+    private final boolean isCompleted;
+    private final boolean isDeleted;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     @Builder
-    public ProductResponseDTO(Long id, Long sellerId, String sellerNickname, Category category,
-                             String productName, String productDescription, Long productPrice,
-                             Status status, Location location, int viewCount,
+    public ProductResponseDTO(Long id, Long sellerId, String sellerNickname, Long buyerId, String buyerNickname,
+                             Category category, String productName, String productDescription, Long productPrice,
+                             Status status, Location location, int viewCount, boolean isCompleted, boolean isDeleted,
                              LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.sellerId = sellerId;
         this.sellerNickname = sellerNickname;
+        this.buyerId = buyerId;
+        this.buyerNickname = buyerNickname;
         this.category = category;
         this.productName = productName;
         this.productDescription = productDescription;
@@ -40,6 +46,8 @@ public class ProductResponseDTO {
         this.status = status;
         this.location = location;
         this.viewCount = viewCount;
+        this.isCompleted = isCompleted;
+        this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -50,6 +58,8 @@ public class ProductResponseDTO {
                 .id(product.getId())
                 .sellerId(product.getSeller().getId())
                 .sellerNickname(product.getSeller().getNickname())
+                .buyerId(product.getBuyer() != null ? product.getBuyer().getId() : null)
+                .buyerNickname(product.getBuyer() != null ? product.getBuyer().getNickname() : null)
                 .category(product.getCategory())
                 .productName(product.getProduct_name())
                 .productDescription(product.getProduct_description())
@@ -57,6 +67,8 @@ public class ProductResponseDTO {
                 .status(product.getStatus())
                 .location(product.getLocation())
                 .viewCount(product.getView_count())
+                .isCompleted(product.is_completed())
+                .isDeleted(product.is_deleted())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

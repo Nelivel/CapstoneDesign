@@ -1,5 +1,6 @@
 package com.example.deskclean.service;
 
+import com.example.deskclean.domain.Enum.Status;
 import com.example.deskclean.domain.Product;
 import com.example.deskclean.domain.User;
 import com.example.deskclean.dto.Product.ProductCreateRequestDTO;
@@ -69,5 +70,31 @@ public class ProductService {
                     productRepository.save(product);
                     return true;
                 }).orElse(false);
+    }
+
+    // 거래 완료 처리
+    @Transactional
+    public Product completeTransaction(Long productId, Long buyerId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        User buyer = userRepository.findById(buyerId)
+                .orElseThrow(() -> new IllegalArgumentException("구매자를 찾을 수 없습니다."));
+
+        // 이미 거래 완료된 상품인지 확인
+        if (product.is_completed()) {
+            throw new IllegalStateException("이미 거래가 완료된 상품입니다.");
+        }
+
+        // 판매자가 자기 상품을 구매할 수 없음
+        if (product.getSeller().getId().equals(buyerId)) {
+            throw new IllegalArgumentException("판매자는 본인의 상품을 구매할 수 없습니다.");
+        }
+
+        product.setBuyer(buyer);
+        product.set_completed(true);
+        product.setStatus(Status.SOLD_OUT);
+
+        return productRepository.save(product);
     }
 }

@@ -10,12 +10,12 @@ public class ReportResponseDTO {
     private String report_type;
     private String comment;
     private String status;
-    private Long post_id;
-    private Long reply_id;
 
+    // 신고 대상 정보
+    private Long product_id;
+    private Long reported_user_id;
+    private Long message_id;
     private String content;
-
-    private Long post_reply_id;
 
     public ReportResponseDTO(Report report) {
         this.report_id = report.getReport_id();
@@ -23,16 +23,21 @@ public class ReportResponseDTO {
         this.report_type = report.getReport_type().toString();
         this.comment = report.getComment();
         this.status = report.getStatus().toString();
-        if(report.getPost_id() != null) {
-            this.post_id = report.getPost_id().getPost_id();
-            this.content = report.getPost_id().getTitle();
+
+        // 상품 신고
+        if(report.getProduct_id() != null) {
+            this.product_id = report.getProduct_id().getId();
+            this.content = report.getProduct_id().getProduct_name();
         }
-        if(report.getReply_id() != null) {
-            this.post_reply_id = report.getReply_id().getPost().getPost_id();
-            this.reply_id = report.getReply_id().getReply_id();
-            this.content = report.getReply_id().getContent();
+        // 사용자 신고
+        if(report.getReported_user_id() != null) {
+            this.reported_user_id = report.getReported_user_id().getId();
+            this.content = report.getReported_user_id().getNickname();
+        }
+        // 메시지 신고
+        if(report.getMessage_id() != null) {
+            this.message_id = report.getMessage_id().getId();
+            this.content = report.getMessage_id().getContent();
         }
     }
-
-
 }
