@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductService productService;
@@ -86,6 +86,20 @@ public class ProductController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // 거래 완료 처리
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<ProductResponseDTO> completeTransaction(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // TODO: JWT 토큰에서 buyer_id 추출
+        Long buyerId = 2L; // 임시 하드코딩 (판매자 ID와 다른 값)
+
+        Product completedProduct = productService.completeTransaction(id, buyerId);
+        ProductResponseDTO response = ProductResponseDTO.fromEntity(completedProduct);
+        return ResponseEntity.ok(response);
     }
 }
 

@@ -29,6 +29,11 @@ public class Product extends BaseTimeEntity {
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
+    // 구매자 (거래 완료 시에만 설정됨)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "buyer_id")
+    private User buyer;
+
     // 카테고리 선택 (enum 타입)
     @Enumerated(EnumType.STRING)
     @NotNull
@@ -63,4 +68,9 @@ public class Product extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @NotNull
     private Location location;
+
+    // 거래 완료 여부
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean is_completed = false;
 }

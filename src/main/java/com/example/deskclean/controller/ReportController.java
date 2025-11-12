@@ -26,35 +26,55 @@ public class ReportController {
    @Autowired
    private EnumCastingUtil enumCastingUtil;
 
-   // post 신고하기
-   @PostMapping("/posts")
-   public ResponseEntity<ReportPostResponseDTO> createPostReport(
+   // ===== 새로운 신고 API =====
+
+   // 상품 신고
+   @PostMapping("/products")
+   public ResponseEntity<ReportProductResponseDTO> createProductReport(
            @RequestHeader(value = "Authorization", required = false) String token,
-           @RequestBody ReportPostRequestDTO reportPostRequestDTO) {
+           @RequestBody ReportProductRequestDTO reportProductRequestDTO) {
 
        // TODO: JWT 토큰에서 user_id 추출 로직 구현 필요
        // Long reporter_id = getUserIdFromToken(token);
        Long reporter_id = 1L; // 임시 하드코딩
 
-       ReportPostResponseDTO responseDTO = reportService.createPostReport(reporter_id, reportPostRequestDTO);
+       ReportProductResponseDTO responseDTO = reportService.createProductReport(reporter_id, reportProductRequestDTO);
 
        return ResponseEntity.ok(responseDTO);
    }
 
-   // 신고_댓글_매핑
-   @PostMapping("/replies")
-   public ResponseEntity<ReportReplyResponseDTO> createReplyReport(
+   // 사용자 신고
+   @PostMapping("/users")
+   public ResponseEntity<ReportUserResponseDTO> createUserReport(
            @RequestHeader(value = "Authorization", required = false) String token,
-           @RequestBody ReportReplyRequestDTO reportReplyRequestDTO) {
+           @RequestBody ReportUserRequestDTO reportUserRequestDTO) {
 
        // TODO: JWT 토큰에서 user_id 추출 로직 구현 필요
        // Long reporter_id = getUserIdFromToken(token);
        Long reporter_id = 1L; // 임시 하드코딩
 
-       ReportReplyResponseDTO responseDTO = reportService.createReplyReport(reporter_id, reportReplyRequestDTO);
+       ReportUserResponseDTO responseDTO = reportService.createUserReport(reporter_id, reportUserRequestDTO);
 
        return ResponseEntity.ok(responseDTO);
    }
+
+   // 메시지 신고
+   @PostMapping("/messages")
+   public ResponseEntity<ReportMessageResponseDTO> createMessageReport(
+           @RequestHeader(value = "Authorization", required = false) String token,
+           @RequestBody ReportMessageRequestDTO reportMessageRequestDTO) {
+
+       // TODO: JWT 토큰에서 user_id 추출 로직 구현 필요
+       // Long reporter_id = getUserIdFromToken(token);
+       Long reporter_id = 1L; // 임시 하드코딩
+
+       ReportMessageResponseDTO responseDTO = reportService.createMessageReport(reporter_id, reportMessageRequestDTO);
+
+       return ResponseEntity.ok(responseDTO);
+   }
+
+   // ===== 기존 Post/Reply 신고 API (사용 안 함 - 커뮤니티 게시판 제거됨) =====
+   // 삭제 예정: /posts, /replies 엔드포인트
 
    // 신고 상태 변경
    @PutMapping("/status/{report_id}")

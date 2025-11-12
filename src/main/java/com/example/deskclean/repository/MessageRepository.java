@@ -37,4 +37,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     
     // 최근 메시지 조회 (내림차순)
     List<Message> findAllByOrderByCreatedAtDesc();
+
+    // 최근 N개 메시지 ID 조회 (created_at이 null이 아닌 것만)
+    @Query("SELECT m.id FROM Message m WHERE m.createdAt IS NOT NULL ORDER BY m.createdAt DESC")
+    List<Long> findRecentMessageIds();
+
+    // 특정 ID 리스트의 메시지 조회 with readBy (EAGER 로딩) - 오래된 순서로
+    @Query("SELECT DISTINCT m FROM Message m LEFT JOIN FETCH m.readBy WHERE m.id IN :ids ORDER BY m.createdAt ASC")
+    List<Message> findByIdsWithReadBy(@Param("ids") List<Long> ids);
 }

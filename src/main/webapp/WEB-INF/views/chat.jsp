@@ -44,15 +44,16 @@
         ws.onmessage = function(event) {
             const message = JSON.parse(event.data);
             console.log('Received message:', message); // 디버깅용 로그
-            
+
             if (message.type === 'ENTER' || message.type === 'LEAVE') {
                 createSystemMessage(message);
             } else if (message.type === 'TALK') {
                 // 이미 표시된 메시지는 건너뛰기
                 if (!allMessages.has(message.messageId)) {
                     allMessages.set(message.messageId, message);
-                    createTalkMessage(message);
-                    // 내가 보낸 메시지가 아니면 자동으로 읽음 처리
+                    createTalkMessage(message, message.isRead || false);
+
+                    // 상대방이 보낸 메시지는 자동으로 읽음 처리
                     if (message.nickname !== myNickname) {
                         setTimeout(() => {
                             markMessageAsRead(message.messageId);
@@ -85,37 +86,38 @@
             chatBox.appendChild(container);
         }
         
-        function createTalkMessage(msg) {
-            console.log('Creating message:', msg); // 디버깅
+        function createTalkMessage(msg, isRead) {
+            console.log('Creating message:', msg, 'isRead:', isRead); // 디버깅
             const isMyMessage = (msg.nickname === myNickname);
             console.log('Is my message?', isMyMessage, 'myNickname:', myNickname, 'msg.nickname:', msg.nickname); // 디버깅
             const container = document.createElement('div');
             container.className = isMyMessage ? 'message-container my-message' : 'message-container other-message';
             container.setAttribute('data-message-id', msg.messageId);
-            
+
             const messageWrapper = document.createElement('div');
             const nicknameSpan = document.createElement('div');
             nicknameSpan.className = 'nickname';
             nicknameSpan.textContent = msg.nickname;
-            
+
             const bubble = document.createElement('div');
             bubble.className = 'message-bubble';
             bubble.textContent = msg.content;
-            
+
             // 읽음 상태 표시 (자신이 보낸 메시지에만)
             if (isMyMessage) {
                 const readStatus = document.createElement('div');
                 readStatus.className = 'read-status';
-                readStatus.textContent = '안 읽음';
+                readStatus.textContent = isRead ? '읽음' : '안 읽음';
+                readStatus.style.color = isRead ? '#4CAF50' : '#999';
                 readStatus.id = 'read-status-' + msg.messageId;
                 messageWrapper.appendChild(readStatus);
             }
-            
+
             messageWrapper.appendChild(nicknameSpan);
             messageWrapper.appendChild(bubble);
             container.appendChild(messageWrapper);
             chatBox.appendChild(container);
-            
+
             console.log('Message added to chatBox. Total messages in allMessages:', allMessages.size); // 디버깅
         }
         

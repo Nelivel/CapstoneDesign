@@ -5,10 +5,7 @@ import com.example.deskclean.domain.Enum.ReportStatus;
 import com.example.deskclean.domain.Enum.ReportType;
 import com.example.deskclean.dto.Report.*;
 import com.example.deskclean.dto.paging.PageResponseDTO;
-import com.example.deskclean.repository.PostRepository;
-import com.example.deskclean.repository.ReplyRepository;
-import com.example.deskclean.repository.ReportRepository;
-import com.example.deskclean.repository.UserRepository;
+import com.example.deskclean.repository.*;
 import com.example.deskclean.util.EnumCastingUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,82 +29,125 @@ public class ReportService {
     private UserRepository userRepository;
 
     @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
     EnumCastingUtil enumCastingUtil;
 
-    // post 신고
-    @Transactional
-    public ReportPostResponseDTO createPostReport(Long reporter_id, ReportPostRequestDTO requestDTO) {
+    // ===== 새로운 신고 기능 =====
 
+    // 상품 신고
+    @Transactional
+    public ReportProductResponseDTO createProductReport(Long reporter_id, ReportProductRequestDTO requestDTO) {
         // 신고자
         User reporter = userRepository.findById(reporter_id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reporter id: " + reporter_id));
 
-        // 신고당한 post
-        Post post = postRepository.findById(requestDTO.getPost_id())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid post id: " + requestDTO.getPost_id()));
+        // 신고당한 상품
+        Product product = productRepository.findById(requestDTO.getProduct_id())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid product id: " + requestDTO.getProduct_id()));
 
         ReportType reportType = enumCastingUtil.castingReportType(requestDTO.getReport_type());
 
         // 신고 build
         Report report = Report.builder()
-                .reporter_id(reporter) // 신고자 정보
-                .report_type(reportType) // 신고 사유 선택
-                .comment(requestDTO.getComment()) // 신고 상세 사유
+                .reporter_id(reporter)
+                .report_type(reportType)
+                .comment(requestDTO.getComment())
                 .status(ReportStatus.RECEIVED)
-                .post_id(post)
+                .product_id(product)
                 .build();
 
         reportRepository.save(report);
 
-        return ReportPostResponseDTO.builder()
+        return ReportProductResponseDTO.builder()
                 .report_id(report.getReport_id())
-                .reporter_nickname(report.getReporter_id().getNickname())
-                .post_id(post.getPost_id())
-                .post_title(post.getTitle())
-                .post_content(post.getContent())
-                .post_author_nickname(post.getAuthor().getNickname())
-                .report_type(report.getReport_type())
-                .comment(report.getComment())
-                .status(report.getStatus())
+                .reporter_nickname(reporter.getNickname())
+                .product_id(product.getId())
+                .product_name(product.getProduct_name())
+                .seller_nickname(product.getSeller().getNickname())
+                .report_type(reportType)
+                .comment(requestDTO.getComment())
+                .status(ReportStatus.RECEIVED)
                 .build();
     }
 
-    // 신고_댓글_매핑
+    // 사용자 신고
     @Transactional
-    public ReportReplyResponseDTO createReplyReport(Long reporter_id, ReportReplyRequestDTO requestDTO) {
-
-        ReportType type = enumCastingUtil.castingReportType(requestDTO.getReport_type());
-
+    public ReportUserResponseDTO createUserReport(Long reporter_id, ReportUserRequestDTO requestDTO) {
         // 신고자
         User reporter = userRepository.findById(reporter_id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reporter id: " + reporter_id));
 
-        // 신고당한 reply
-        Reply reply = replyRepository.findById(requestDTO.getReply_id())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid reply id: " + requestDTO.getReply_id()));
+        // 신고당한 사용자
+        User reportedUser = userRepository.findById(requestDTO.getReported_user_id())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reported user id: " + requestDTO.getReported_user_id()));
+
+        ReportType reportType = enumCastingUtil.castingReportType(requestDTO.getReport_type());
 
         // 신고 build
         Report report = Report.builder()
                 .reporter_id(reporter)
-                .report_type(type)
+                .report_type(reportType)
                 .comment(requestDTO.getComment())
                 .status(ReportStatus.RECEIVED)
-                .reply_id(reply)
+                .reported_user_id(reportedUser)
                 .build();
 
         reportRepository.save(report);
 
-        return ReportReplyResponseDTO.builder()
+        return ReportUserResponseDTO.builder()
                 .report_id(report.getReport_id())
-                .reporter_nickname(report.getReporter_id().getNickname())
-                .reply_id(reply.getReply_id())
-                .reply_content(reply.getContent())
-                .reply_author_nickname(reply.getAuthor().getNickname())
-                .report_type(report.getReport_type())
-                .comment(report.getComment())
-                .status(report.getStatus())
+                .reporter_nickname(reporter.getNickname())
+                .reported_user_id(reportedUser.getId())
+                .reported_user_nickname(reportedUser.getNickname())
+                .report_type(reportType)
+                .comment(requestDTO.getComment())
+                .status(ReportStatus.RECEIVED)
                 .build();
     }
+
+    // 메시지 신고
+    @Transactional
+    public ReportMessageResponseDTO createMessageReport(Long reporter_id, ReportMessageRequestDTO requestDTO) {
+        // 신고자
+        User reporter = userRepository.findById(reporter_id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reporter id: " + reporter_id));
+
+        // 신고당한 메시지
+        Message message = messageRepository.findById(requestDTO.getMessage_id())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid message id: " + requestDTO.getMessage_id()));
+
+        ReportType reportType = enumCastingUtil.castingReportType(requestDTO.getReport_type());
+
+        // 신고 build
+        Report report = Report.builder()
+                .reporter_id(reporter)
+                .report_type(reportType)
+                .comment(requestDTO.getComment())
+                .status(ReportStatus.RECEIVED)
+                .message_id(message)
+                .build();
+
+        reportRepository.save(report);
+
+        return ReportMessageResponseDTO.builder()
+                .report_id(report.getReport_id())
+                .reporter_nickname(reporter.getNickname())
+                .message_id(message.getId())
+                .message_content(message.getContent())
+                .message_author_nickname(message.getNickname())
+                .report_type(reportType)
+                .comment(requestDTO.getComment())
+                .status(ReportStatus.RECEIVED)
+                .build();
+    }
+
+    // ===== 기존 Post/Reply 신고 기능 (사용 안 함 - 커뮤니티 게시판 제거됨) =====
+    // 삭제 예정: createPostReport(), createReplyReport()
 
     // 신고 처리 상태 변경
     @Transactional
@@ -129,22 +169,28 @@ public class ReportService {
         int pageLimit = 10;
         int page = pagingRequestDTO.getPage();
 
-        Page<Report> reportPage = null;
+        Page<Report> reportPage;
 
-        if(pagingRequestDTO.getType().equalsIgnoreCase("reply")){
-            reportPage = reportRepository.findAllReplyReport(ReportStatus.RECEIVED,PageRequest.of(page-1, pageLimit));
-
-        }else if (pagingRequestDTO.getType().equalsIgnoreCase("post")){
-            reportPage = reportRepository.findAllPostReport(ReportStatus.RECEIVED, PageRequest.of(page-1, pageLimit));
+        // 신고 유형에 따라 조회
+        String type = pagingRequestDTO.getType().toLowerCase();
+        switch (type) {
+            case "product":
+                reportPage = reportRepository.findAllProductReport(ReportStatus.RECEIVED, PageRequest.of(page-1, pageLimit));
+                break;
+            case "user":
+                reportPage = reportRepository.findAllUserReport(ReportStatus.RECEIVED, PageRequest.of(page-1, pageLimit));
+                break;
+            case "message":
+                reportPage = reportRepository.findAllMessageReport(ReportStatus.RECEIVED, PageRequest.of(page-1, pageLimit));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid report type: " + type);
         }
 
-        // 각 Post를 PostResponseDto로 변환합니다.
-        Page<ReportResponseDTO> reportResponseDtos = reportPage.map(
-                report -> new ReportResponseDTO(report));
+        // 각 Report를 ReportResponseDto로 변환
+        Page<ReportResponseDTO> reportResponseDtos = reportPage.map(ReportResponseDTO::new);
 
-        PageResponseDTO pages = new PageResponseDTO(reportResponseDtos);
-
-        return pages;
+        return new PageResponseDTO(reportResponseDtos);
     }
 
 }

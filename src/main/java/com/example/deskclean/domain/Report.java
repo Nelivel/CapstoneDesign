@@ -31,27 +31,23 @@ public class Report extends BaseTimeEntity {
     private String comment; // 신고 상세 사유
 
 
-//    @Column(name = "created_at", updatable = false, nullable = false)
-//    private LocalDateTime created_at; // 신고 날짜
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportStatus status;
 
 
+    // 신고 대상 (상품, 사용자, 메시지 중 하나만 설정됨)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private Post post_id; // 신고타겟 post id
-
+    @JoinColumn(name = "product_id")
+    private Product product_id; // 신고타겟 product id
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reply_id")
-    private Reply reply_id; // 신고타겟 reply id
+    @JoinColumn(name = "reported_user_id")
+    private User reported_user_id; // 신고타겟 user id
 
-//chat으로 변경
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "message_id")
-//    private Message message_id; // 신고타겟 message id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "message_id")
+    private Message message_id; // 신고타겟 message id
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "admin_uid")

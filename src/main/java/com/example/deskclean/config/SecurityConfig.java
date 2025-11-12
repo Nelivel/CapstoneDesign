@@ -23,7 +23,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 로그인 페이지, 루트 페이지, 회원가입 API, 결제 콜백 API는 누구나 접근 허용
                 .requestMatchers("/", "/login", "/api/auth/signup",
-                                 "/api/payments/success", "/api/payments/cancel", "/api/payments/fail").permitAll()
+                                 "/api/payments/success", "/api/payments/cancel", "/api/payments/fail",
+                                 "/api/reviews/**").permitAll()
                 // 나머지 모든 요청 (채팅, API 등)은 인증(로그인)된 사용자만 접근 가능
                 .anyRequest().authenticated()
             )

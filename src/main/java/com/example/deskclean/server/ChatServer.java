@@ -55,25 +55,67 @@ public class ChatServer {
             clients.add(session);
             userSessions.put(username, user.getId());
             
-            // 최근 메시지 히스토리 로드 (최근 50개)
-            List<Message> recentMessages = messageRepository.findAllByOrderByCreatedAtDesc()
-                    .stream()
-                    .limit(50)
-                    .collect(java.util.stream.Collectors.toList());
-            
+            // 전체 메시지 히스토리 로드 (오래된 순서로, readBy EAGER 로딩)
+            // 1단계: 전체 메시지 ID 조회
+            List<Long> recentMessageIds = messageRepository.findRecentMessageIds();
+
+            System.out.println("DEBUG: Recent message IDs (first 10): " + recentMessageIds.stream().limit(10).collect(java.util.stream.Collectors.toList()));
+
+            // 2단계: 해당 ID들의 메시지를 readBy와 함께 조회 (이미 오래된 순서로 정렬됨)
+            List<Message> recentMessages = Collections.emptyList();
+            if (!recentMessageIds.isEmpty()) {
+                recentMessages = messageRepository.findByIdsWithReadBy(recentMessageIds);
+                System.out.println("DEBUG: Loaded " + recentMessages.size() + " messages");
+                if (!recentMessages.isEmpty()) {
+                    System.out.println("DEBUG: First message ID: " + recentMessages.get(0).getId() + ", content: " + recentMessages.get(0).getContent() + ", created_at: " + recentMessages.get(0).getCreatedAt());
+                    System.out.println("DEBUG: Last message ID: " + recentMessages.get(recentMessages.size()-1).getId() + ", content: " + recentMessages.get(recentMessages.size()-1).getContent() + ", created_at: " + recentMessages.get(recentMessages.size()-1).getCreatedAt());
+                }
+            }
+
             for (Message msg : recentMessages) {
                 Map<String, Object> messageMap = new HashMap<>();
                 messageMap.put("type", "TALK");
                 messageMap.put("nickname", msg.getNickname());
                 messageMap.put("content", msg.getContent());
                 messageMap.put("messageId", msg.getId());
+
+                // 읽음 상태 확인 및 자동 읽음 처리
+                boolean isRead = false;
+                if (msg.getUser().getId().equals(user.getId())) {
+                    // 내가 보낸 메시지 → 상대방이 읽었는지 (readBy에 2명 이상)
+                    isRead = msg.getReadBy().size() >= 2;
+                } else {
+                    // 상대방이 보낸 메시지 → 내가 읽었는지 확인
+                    boolean alreadyRead = false;
+                    for (User reader : msg.getReadBy()) {
+                        if (reader.getId().equals(user.getId())) {
+                            alreadyRead = true;
+                            isRead = true;
+                            break;
+                        }
+                    }
+
+                    // 아직 읽지 않은 메시지는 자동으로 읽음 처리
+                    if (!alreadyRead) {
+                        msg.getReadBy().add(user);
+                        messageRepository.save(msg);
+                        isRead = true;
+
+                        // 읽음 상태 브로드캐스트 (접속 완료 후에 보내기 위해 저장)
+                        Map<String, Object> readMap = new HashMap<>();
+                        readMap.put("type", "READ");
+                        readMap.put("messageId", msg.getId());
+                        try {
+                            broadcast(new Gson().toJson(readMap));
+                        } catch (Exception e) {
+                            System.err.println("Error broadcasting read status: " + e.getMessage());
+                        }
+                    }
+                }
+                messageMap.put("isRead", isRead);
+
                 session.getBasicRemote().sendText(new Gson().toJson(messageMap));
             }
-            
-            Map<String, String> message = new HashMap<>();
-            message.put("type", "ENTER");
-            message.put("nickname", nickname);
-            broadcast(new Gson().toJson(message));
             
             System.out.println("User " + username + " connected. Total clients: " + clients.size());
         } catch (Exception e) {
@@ -109,11 +151,13 @@ public class ChatServer {
             if ("TALK".equals(messageType)) {
                 // 일반 메시지 처리
                 String content = (String) receivedMsg.get("content");
-                
+
                 Message message = new Message();
                 message.setContent(content);
                 message.setUser(user);
                 message.setNickname(nickname);
+                // 메시지 작성자는 자동으로 읽은 것으로 처리
+                message.getReadBy().add(user);
                 messageRepository.save(message);
 
                 Map<String, Object> messageMap = new HashMap<>();
@@ -121,8 +165,10 @@ public class ChatServer {
                 messageMap.put("nickname", nickname);
                 messageMap.put("content", content);
                 messageMap.put("messageId", message.getId());
+                // 새로 보낸 메시지는 아직 상대방이 읽지 않았으므로 false
+                messageMap.put("isRead", false);
                 broadcast(new Gson().toJson(messageMap));
-                
+
                 System.out.println("Message sent by " + nickname + ": " + content);
                 
             } else if ("READ".equals(messageType)) {
@@ -179,19 +225,12 @@ public class ChatServer {
     
     @OnClose
     public void onClose(Session session) throws IOException {
-        String nickname = (String) session.getUserProperties().get("nickname");
         String username = (String) session.getUserProperties().get("username");
-        
+
         clients.remove(session);
         userSessions.remove(username);
-        
-        if (nickname != null) {
-            Map<String, String> message = new HashMap<>();
-            message.put("type", "LEAVE");
-            message.put("nickname", nickname);
-            broadcast(new Gson().toJson(message));
-            System.out.println("User " + username + " disconnected. Total clients: " + clients.size());
-        }
+
+        System.out.println("User " + username + " disconnected. Total clients: " + clients.size());
     }
 
     private void broadcast(String message) throws IOException {

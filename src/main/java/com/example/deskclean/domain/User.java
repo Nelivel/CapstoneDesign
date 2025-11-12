@@ -29,11 +29,11 @@ public class User {
     private String nickname; // 채팅에서 사용할 별명
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true) // 기존 데이터와의 호환성을 위해 nullable
+    @Column(nullable = false)
     @Builder.Default
     private Role role = Role.USER; // 기본값 USER
 
-    @Column(nullable = true) // 기존 데이터와의 호환성을 위해 nullable
+    @Column(nullable = false)
     @Builder.Default
     private Boolean is_suspended = false; // 정지 여부
 
@@ -45,4 +45,21 @@ public class User {
     private Boolean is_deleted = false; // 삭제(탈퇴) 여부
 
     private LocalDateTime deleted_at; // 삭제(탈퇴) 일시
+
+    // 신뢰도 시스템 관련 필드
+    @Column(nullable = false)
+    @Builder.Default
+    private Double reliability_score = 2.0; // 신뢰도 점수 (0.0 ~ 4.5, 기본값 2.0)
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer total_transactions = 0; // 총 거래 횟수
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer positive_reviews = 0; // 받은 긍정 평가 수
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer negative_reviews = 0; // 받은 부정 평가 수
 }
