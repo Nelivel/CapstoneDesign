@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 public class RecommendRequestDto {
     @NotNull(message = "userId는 필수입니다")
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private BigInteger userId;
 
     @NotNull(message = "page는 필수입니다")

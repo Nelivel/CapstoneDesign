@@ -42,7 +42,7 @@ public class Report extends BaseTimeEntity {
     private Product product_id; // 신고타겟 product id
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_user_id")
+    @JoinColumn(name = "reportedUserId")
     private User reported_user_id; // 신고타겟 user id
 
     @ManyToOne(fetch = FetchType.LAZY)

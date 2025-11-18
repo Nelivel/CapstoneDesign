@@ -13,7 +13,7 @@ public class ReportResponseDTO {
 
     // 신고 대상 정보
     private Long product_id;
-    private Long reported_user_id;
+    private Long reportedUserId;
     private Long message_id;
     private String content;
 
@@ -27,11 +27,11 @@ public class ReportResponseDTO {
         // 상품 신고
         if(report.getProduct_id() != null) {
             this.product_id = report.getProduct_id().getId();
-            this.content = report.getProduct_id().getProduct_name();
+            this.content = report.getProduct_id().getTitle();
         }
         // 사용자 신고
         if(report.getReported_user_id() != null) {
-            this.reported_user_id = report.getReported_user_id().getId();
+            this.reportedUserId = report.getReported_user_id().getId();
             this.content = report.getReported_user_id().getNickname();
         }
         // 메시지 신고

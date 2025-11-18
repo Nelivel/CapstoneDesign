@@ -67,7 +67,7 @@ public class ReportService {
                 .report_id(report.getReport_id())
                 .reporter_nickname(reporter.getNickname())
                 .product_id(product.getId())
-                .product_name(product.getProduct_name())
+                .product_name(product.getTitle())
                 .seller_nickname(product.getSeller().getNickname())
                 .report_type(reportType)
                 .comment(requestDTO.getComment())
@@ -83,8 +83,8 @@ public class ReportService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reporter id: " + reporter_id));
 
         // 신고당한 사용자
-        User reportedUser = userRepository.findById(requestDTO.getReported_user_id())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid reported user id: " + requestDTO.getReported_user_id()));
+        User reportedUser = userRepository.findById(requestDTO.getReportedUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reported user id: " + requestDTO.getReportedUserId()));
 
         ReportType reportType = enumCastingUtil.castingReportType(requestDTO.getReport_type());
 
@@ -102,7 +102,7 @@ public class ReportService {
         return ReportUserResponseDTO.builder()
                 .report_id(report.getReport_id())
                 .reporter_nickname(reporter.getNickname())
-                .reported_user_id(reportedUser.getId())
+                .reportedUserId(reportedUser.getId())
                 .reported_user_nickname(reportedUser.getNickname())
                 .report_type(reportType)
                 .comment(requestDTO.getComment())

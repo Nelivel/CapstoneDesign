@@ -15,7 +15,7 @@ public class ScheduleBlock {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private User user; // 이 시간표의 주인
 
     @Column(nullable = false)

@@ -31,7 +31,7 @@ public class ReviewResponseDTO {
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .productId(review.getProduct().getId())
-                .productName(review.getProduct().getProduct_name())
+                .productName(review.getProduct().getTitle())
                 .reviewerId(review.getReviewer().getId())
                 .reviewerNickname(review.getReviewer().getNickname())
                 .revieweeId(review.getReviewee().getId())

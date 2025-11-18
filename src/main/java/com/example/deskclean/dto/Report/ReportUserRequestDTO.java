@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReportUserRequestDTO {
 
-    private Long reported_user_id; // 신고할 사용자 ID
+    private Long reportedUserId; // 신고할 사용자 ID
 
     private String report_type; // 신고 사유 선택
 

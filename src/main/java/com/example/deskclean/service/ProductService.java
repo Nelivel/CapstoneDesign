@@ -2,9 +2,12 @@ package com.example.deskclean.service;
 
 import com.example.deskclean.domain.Enum.Status;
 import com.example.deskclean.domain.Product;
+import com.example.deskclean.domain.ProductImage;
 import com.example.deskclean.domain.User;
 import com.example.deskclean.dto.Product.ProductCreateRequestDTO;
+import com.example.deskclean.dto.Product.ProductResponseDTO;
 import com.example.deskclean.dto.Product.ProductUpdateRequestDTO;
+import com.example.deskclean.repository.ProductImageRepository;
 import com.example.deskclean.repository.ProductRepository;
 import com.example.deskclean.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ProductImageRepository productImageRepository;
 
     // Create
     @Transactional
@@ -42,9 +47,42 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
+    // ID로 상품 조회 (이미지 포함)
+    public Optional<ProductResponseDTO> findByIdWithImages(Long id) {
+        return productRepository.findById(id)
+                .map(product -> {
+                    List<String> imageUrls = productImageRepository.findByItemDbid(id)
+                            .stream()
+                            .map(ProductImage::getImageUrl)
+                            .map(this::convertToHttpUrl)
+                            .collect(Collectors.toList());
+                    return ProductResponseDTO.fromEntityWithImages(product, imageUrls);
+                });
+    }
+
+    // 로컬 경로를 HTTP URL로 변환
+    private String convertToHttpUrl(String localPath) {
+        // "/mnt/sdb-data/daangn_images/4418_c08a36790c5ee912.webp"
+        // -> "http://34.94.118.159/img/4418_c08a36790c5ee912.webp"
+        if (localPath == null || localPath.isEmpty()) {
+            return localPath;
+        }
+
+        // 파일명 추출 (마지막 / 이후의 문자열)
+        int lastSlashIndex = localPath.lastIndexOf('/');
+        if (lastSlashIndex != -1 && lastSlashIndex < localPath.length() - 1) {
+            String fileName = localPath.substring(lastSlashIndex + 1);
+            return "http://34.94.118.159/img/" + fileName;
+        }
+
+        return localPath;
+    }
+
     public Page<Product> findPageable(Pageable pageable) {
         return productRepository.findAll(pageable);
     }
+
+    
 
     // Update
     @Transactional
@@ -52,11 +90,10 @@ public class ProductService {
         return productRepository.findById(id)
                 .map(product -> {
                     product.setCategory(updateRequest.getCategory());
-                    product.setProduct_name(updateRequest.getProductName());
-                    product.setProduct_description(updateRequest.getProductDescription());
-                    product.setProduct_price(updateRequest.getProductPrice());
+                    product.setTitle(updateRequest.getTitle());
+                    product.setContent(updateRequest.getContent());
+                    product.setPrice(updateRequest.getPrice());
                     product.setStatus(updateRequest.getStatus());
-                    product.setLocation(updateRequest.getLocation());
                     return productRepository.save(product);
                 });
     }
@@ -91,9 +128,8 @@ public class ProductService {
             throw new IllegalArgumentException("판매자는 본인의 상품을 구매할 수 없습니다.");
         }
 
-        product.setBuyer(buyer);
         product.set_completed(true);
-        product.setStatus(Status.SOLD_OUT);
+        product.setStatus(2);
 
         return productRepository.save(product);
     }

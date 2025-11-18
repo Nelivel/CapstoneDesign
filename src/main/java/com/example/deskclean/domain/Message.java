@@ -6,8 +6,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -19,29 +17,24 @@ public class Message {
 
     // [중요] 메시지를 보낸 사람 (User와 연결)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "userId")
     private User user;
 
     @Column(nullable = false)
     private String content;
-    
+
     // 메시지 작성 시점의 닉네임 (성능 향상 및 데이터 보존을 위해)
     @Column(nullable = false)
     private String nickname;
-    
+
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-    @Column
+
+    @Column(name = "is_read")
     private Boolean isRead = false;
-    
-    // 이 메시지를 읽은 사용자들 (실시간 읽음 상태용)
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "message_read_by",
-        joinColumns = @JoinColumn(name = "message_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> readBy = new HashSet<>();
+
+    // 채팅방 ID (향후 여러 채팅방 지원을 위한 필드)
+    @Column(name = "chat_room_id")
+    private Long chatRoomId;
 }

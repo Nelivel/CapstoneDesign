@@ -15,7 +15,7 @@ public class Timetable {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "userId", nullable = false, unique = true)
     private User user; // 시간표 주인
 
     // 월요일 시간표 (JSON 배열 형태로 저장)

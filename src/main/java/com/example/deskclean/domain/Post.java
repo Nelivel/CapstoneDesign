@@ -17,7 +17,7 @@ public class Post extends BaseTimeEntity {
     private Long post_id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private User author;
 
     @Column(nullable = false)

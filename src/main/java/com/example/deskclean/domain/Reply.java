@@ -21,7 +21,7 @@ public class Reply extends BaseTimeEntity {
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private User author;
 
     @Column(columnDefinition = "TEXT", nullable = false)

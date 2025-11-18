@@ -1,15 +1,15 @@
 package com.example.deskclean.domain;
 
+import java.time.LocalDateTime;
+
 import com.example.deskclean.domain.Enum.Category;
-import com.example.deskclean.domain.Enum.Location;
-import com.example.deskclean.domain.Enum.Status;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
-@Table(name = "product")
+@Table(name = "items")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,40 +21,35 @@ public class Product extends BaseTimeEntity {
     // 식별자
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
+    @Column(name = "dbid")
     private Long id;
 
     // 판매자 (User와의 관계)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private User seller;
 
-    // 구매자 (거래 완료 시에만 설정됨)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_id")
-    private User buyer;
-
     // 카테고리 선택 (enum 타입)
-    @Enumerated(EnumType.STRING)
     @NotNull
-    private Category category;
+    private String category;
 
     // 상품명
     @NotNull
-    private String product_name;
+    private String title;
 
     // 상품 설명
+    @Column(columnDefinition = "TEXT")
     @NotNull
-    private String product_description;
+    private String content;
 
     // 상품 가격
     @NotNull
-    private Long product_price;
+    private Long price;
 
-    // 상품 상태 (enum 타입)
-    @Enumerated(EnumType.STRING)
+    // 상품 상태 (정수형)
     @NotNull
-    private Status status;
+    @Column(name = "status")
+    private int status;
 
     // 삭제 여부 (soft delete)
     @Builder.Default
@@ -63,11 +58,6 @@ public class Product extends BaseTimeEntity {
     // 조회수
     @Builder.Default
     private int view_count = 0;
-
-    // 거래 희망 위치 (enum 타입)
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private Location location;
 
     // 거래 완료 여부
     @Builder.Default

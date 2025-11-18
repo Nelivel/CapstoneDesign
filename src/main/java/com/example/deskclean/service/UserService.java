@@ -116,4 +116,18 @@ public class UserService {
         log.info("회원 탈퇴 성공: {} (탈퇴 시각: {})", username, user.getDeleted_at());
         return new AccountDeleteResponseDTO("회원 탈퇴가 완료되었습니다.");
     }
+
+    /**
+     * userId로 닉네임 조회
+     * @param userId 사용자 ID
+     * @return 사용자의 닉네임
+     * @throws IllegalArgumentException 사용자를 찾을 수 없는 경우
+     */
+    public String getNicknameByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+        log.info("닉네임 조회 성공: userId={}, nickname={}", userId, user.getNickname());
+        return user.getNickname();
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.deskclean.controller;
 
+import com.example.deskclean.dto.Recommend.RecommendResponseDto;
 import com.example.deskclean.dto.User.*;
 import com.example.deskclean.service.UserService;
 import jakarta.validation.Valid;
@@ -164,4 +165,6 @@ public class UserController {
             return ResponseEntity.internalServerError().body(error);
         }
     }
+
+    
 }

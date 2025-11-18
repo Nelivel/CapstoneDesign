@@ -46,8 +46,8 @@ dependencies {
 	compileOnly 'org.springframework.boot:spring-boot-starter-tomcat'
 
 	// Cloud SQL PostgreSQL 연결을 위한 필수 라이브러리 (버전 명시)
-	implementation platform("com.google.cloud:spring-cloud-gcp-dependencies:${springCloudGcpVersion}")
-	implementation 'com.google.cloud:spring-cloud-gcp-starter-sql-postgresql'
+	// implementation platform("com.google.cloud:spring-cloud-gcp-dependencies:${springCloudGcpVersion}")
+	// implementation 'com.google.cloud:spring-cloud-gcp-starter-sql-postgresql'
 
 	
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'

@@ -15,7 +15,7 @@ public class ReportUserResponseDTO {
 
     private Long report_id; // 신고 ID
     private String reporter_nickname; // 신고자 닉네임
-    private Long reported_user_id; // 신고된 사용자 ID
+    private Long reportedUserId; // 신고된 사용자 ID
     private String reported_user_nickname; // 신고된 사용자 닉네임
     private ReportType report_type; // 신고 사유
     private String comment; // 신고 상세 사유

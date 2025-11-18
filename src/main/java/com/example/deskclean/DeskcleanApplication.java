@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class DeskcleanApplication {
 
 	public static void main(String[] args) {
+		System.out.println("=== DeskcleanApplication starting ===");
 		SpringApplication.run(DeskcleanApplication.class, args);
 	}
 

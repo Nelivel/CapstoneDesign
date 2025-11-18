@@ -30,7 +30,7 @@ public class ProductController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @Valid @RequestBody ProductCreateRequestDTO request) {
 
-        // TODO: JWT 토큰에서 user_id 추출 로직 구현 필요
+        // TODO: JWT 토큰에서 userId 추출 로직 구현 필요
         Long sellerId = 1L; // 임시 하드코딩
 
         Product savedProduct = productService.save(sellerId, request);
@@ -49,11 +49,11 @@ public class ProductController {
         return ResponseEntity.ok(responses);
     }
 
-    // 특정 상품 아이디 검색 조회
+    // 특정 상품 아이디 검색 조회 (이미지 포함)
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> viewProduct(@PathVariable Long id) {
-        return productService.findById(id)
-                .map(product -> ResponseEntity.ok(ProductResponseDTO.fromEntity(product)))
+        return productService.findByIdWithImages(id)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

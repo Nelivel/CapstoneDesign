@@ -62,7 +62,7 @@ public class KakaoPayService {
         Payment payment = Payment.builder()
                 .product(product)
                 .buyer(buyer)
-                .amount(product.getProduct_price())
+                .amount(product.getPrice())
                 .orderId(orderId)
                 .status(PaymentStatus.READY)
                 .build();
@@ -78,9 +78,9 @@ public class KakaoPayService {
                 "cid", cid,
                 "partner_order_id", orderId,
                 "partner_user_id", buyer.getId().toString(),
-                "item_name", product.getProduct_name(),
+                "item_name", product.getPrice(),
                 "quantity", 1,
-                "total_amount", product.getProduct_price(),
+                "total_amount", product.getPrice(),
                 "tax_free_amount", 0,
                 "approval_url", successUrl + "?orderId=" + orderId,
                 "cancel_url", cancelUrl + "?orderId=" + orderId,
