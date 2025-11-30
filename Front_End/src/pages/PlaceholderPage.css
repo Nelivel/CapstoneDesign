@@ -1,0 +1,28 @@
+/* src/pages/PlaceholderPage.css */
+/* 이 파일의 내용도 정확히 일치하는지 확인 */
+.placeholder-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.placeholder-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: #fff;
+}
+.placeholder-header-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px;
+}
+.placeholder-main {
+  flex-grow: 1;
+  padding: 20px;
+  text-align: center;
+  color: var(--sub-text-color);
+}

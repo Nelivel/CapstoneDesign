@@ -1,0 +1,32 @@
+/* src/components/BottomNavBar.css */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-color);
+  background-color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+.nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+  color: var(--sub-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+.nav-button:hover {
+  color: var(--primary-color);
+}
+/* 활성화된 탭 스타일 */
+.nav-button.active {
+  color: var(--primary-color);
+  font-weight: bold;
+}

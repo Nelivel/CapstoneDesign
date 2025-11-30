@@ -1,0 +1,70 @@
+/* src/pages/ProductPostPage.css */
+.post-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.post-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.post-header-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px; /* 뒤로가기 버튼 공간 확보 */
+}
+.post-main {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* 각 폼 그룹 사이의 간격 */
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-group label {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.95em;
+}
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1em;
+  font-family: inherit; /* body의 폰트 상속 */
+}
+.form-textarea {
+  min-height: 150px;
+  resize: vertical; /* 세로 크기만 조절 가능 */
+}
+.submit-button {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+.submit-button:hover {
+  background-color: #4a38e8;
+}

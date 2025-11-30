@@ -1,0 +1,141 @@
+/* src/pages/TimetableDisplayPage.css */
+.timetable-display-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.timetable-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background-color: #fff;
+}
+.timetable-header-title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-right: 30px;
+}
+.timetable-main {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+.manage-button {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 20px auto 0 auto;
+  display: block;
+}
+
+/* --- Table 기반 시간표 스타일 --- */
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e0e0e0;
+  table-layout: fixed;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.timetable-table th, .timetable-table td {
+  border: 1px solid #f0f0f0;
+  text-align: center;
+  vertical-align: top;
+  /* 수정: .event-cell에만 position: relative 적용 */
+}
+.timetable-table th {
+  height: 30px;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--sub-text-color);
+  border-bottom: 1px solid #e0e0e0;
+}
+.time-label-cell {
+  width: 35px;
+  font-size: 0.75em;
+  color: var(--sub-text-color);
+  padding-top: 4px;
+  border-right: 1px solid #e0e0e0;
+}
+.event-cell {
+  height: 60px;
+  position: relative; /* 수정: 이벤트 블록의 기준점이 되도록 설정 */
+}
+.event-block {
+  position: absolute;
+  width: calc(100% - 4px);
+  left: 2px;
+  color: white;
+  padding: 6px;
+  font-size: 0.8em;
+  font-weight: 500;
+  line-height: 1.3;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border-radius: 4px;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  /* 수정: height에도 transition 추가 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, height 0.2s ease;
+}
+
+.event-cell:hover .event-block {
+  top: 0 !important;
+  left: 2px;
+  width: calc(100% - 4px);
+  height: auto !important;    /* 셀 높이 대신 내용에 맞게 확장 */
+  min-height: 60px;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 10;
+  white-space: normal;
+  overflow: visible;
+}
+
+.event-block:hover {
+  /* ...기존 스타일... */
+  white-space: normal;      /* 줄바꿈 허용 */
+  overflow: visible;        /* 내용이 잘리지 않게 */
+  z-index: 20;
+}
+
+.event-block:hover .event-name,
+.event-block:hover .event-details {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.event-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.event-details {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.event-cell:hover .event-name,
+.event-cell:hover .event-details {
+  white-space: normal;
+}
